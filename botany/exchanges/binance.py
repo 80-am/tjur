@@ -27,37 +27,40 @@ class Binance:
         params = {}
         return self._get(path, params)
 
+    # Current average price for a symbol.
     def cur_avg_price(self, symbol):
         path = "%s/avgPrice" % self.BASE_V3_URL
         params = {"symbol": symbol}
         return self._get(path, params)
 
+    # Latest price for a symbol or symbols.
+    def get_latest_price(self, symbol):
+        path = "%s/ticker/price" % self.BASE_V3_URL
+        params = {"symbol": symbol}
+        return self._get(path, params)
+
     # Kline/candlestick bars for a symbol. Klines are uniquely identified by their open time.
-    def get_historical_data(self, pairing, candle_interval, start_time, end_time, limit):
+    def get_historical_data(self, pairing, candle_interval, limit):
         
         """
         Args:
         pairing (str): Symbol pair to operate on i.e BTCUSDT
         candle_interval (str): Trading time frame i.e 5m or 4h
-        start_time (int, optional): Start timestamp i.e 1553753159999 
-        end_time (int, optional): End timestamp i.e 1553753159999
         limit (int, optional): Number of ticks to return. Default 500; Max 1000 
+        
+        Returns:
+        list: Open time, Open, High, Low, Close, Volume, Close time, Quote asset volume, Number of trades,
+            Taker buy base asset volume, Taker buy quote asset volume, Id
         """
         
         if not candle_interval:
             candle_interval = '4h'
-        if not start_time:
-            start_time = ""
-        if not end_time:
-            end_time = ""
         if not limit or limit > 1000:
             limit = 500 
 
         path = "%s/klines" % self.BASE_URL
-        params = {"symbol": symbol,
+        params = {"symbol": pairing,
                   "interval": candle_interval,
-                  "startTime": start_time,
-                  "endTime": end_time,
                   "limit": limit}
         return self._get(path, params)
 

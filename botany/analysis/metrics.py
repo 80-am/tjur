@@ -1,6 +1,6 @@
 # Historical metrics
 
-from exchanges.binance import binance
+from exchanges.binance import Binance
 
 class Metrics():
     
