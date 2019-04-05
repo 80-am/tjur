@@ -1,8 +1,10 @@
 from urllib.parse import urlencode
 
+import datetime
 import json
-import time
+import pandas as pd
 import requests
+import time
 
 # Bridge to Binance public Rest API
 class Binance:
@@ -41,18 +43,17 @@ class Binance:
 
     # Kline/candlestick bars for a symbol. Klines are uniquely identified by their open time.
     def get_historical_data(self, pairing, candle_interval, limit):
-        
+
         """
         Args:
         pairing (str): Symbol pair to operate on i.e BTCUSDT
         candle_interval (str): Trading time frame i.e 5m or 4h
         limit (int, optional): Number of ticks to return. Default 500; Max 1000 
-        
+
         Returns:
-        list: Open time, Open, High, Low, Close, Volume, Close time, Quote asset volume, Number of trades,
-            Taker buy base asset volume, Taker buy quote asset volume, Id
+        pandas.DataFrame: Open time, Open, High, Low, Close, Volume, Close time 
         """
-        
+
         if not candle_interval:
             candle_interval = '4h'
         if not limit or limit > 1000:
@@ -62,7 +63,17 @@ class Binance:
         params = {"symbol": pairing,
                   "interval": candle_interval,
                   "limit": limit}
-        return self._get(path, params)
+        raw_historical = self._get(path, params)
+        df = pd.read_json(json.dumps(raw_historical))
+        df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close time',
+                      'Quote asset volume', 'Number of trades', 'Taker buy base asset volume',
+                      'Taker buy quote asset volume', 'Ignore']
+        df.drop(df.columns[[7, 8, 9, 10, 11]], axis=1, inplace=True)
+
+        df['Open time'] = df['Open time'].apply(lambda x: datetime.datetime.fromtimestamp(x / 1e3))
+        df['Close time'] = df['Close time'].apply(lambda x: datetime.datetime.fromtimestamp(x / 1e3))
+
+        return df
 
     def _get(self, path, params):
         url = "%s?%s" % (path, urlencode(params))

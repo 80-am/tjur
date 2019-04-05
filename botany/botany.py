@@ -15,4 +15,4 @@ class Botany():
     print(binance.check_connection())
     print(binance.cur_avg_price('BTCUSDT'))
     print(binance.get_latest_price('BTCUSDT'))
-    print(binance.get_historical_data('BTCUSDT', '4h', 1))
+    print(binance.get_historical_data('BTCUSDT', '1m', ''))
