@@ -5,6 +5,7 @@ import json
 import pandas as pd
 import requests
 import time
+import urllib3
 
 # Bridge to Binance public Rest API
 class Binance:
@@ -12,6 +13,7 @@ class Binance:
     BASE_URL = "https://www.binance.com/api/v1"
     BASE_V3_URL = "https://www.api.binance.com/api/v3"
     PUBLIC_URL = "https://www.binance.com/exchange/public/product"
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     def __init__(self, key, secret):
         self.key = key
@@ -75,6 +77,27 @@ class Binance:
 
         return df
 
+    def get_historical_price(self, pairing, candle_interval, limit, price_type):
+
+        """
+        Args:
+        pairing (str): Symbol pair to operate on i.e BTCUSDT
+        candle_interval (str): Trading time frame i.e 5m or 4h
+        limit (int, optional): Number of ticks to return. Default 500; Max 1000 
+        price_type (int): Type of price (OHLC) i.e 2 as in High or 4 as in Close
+
+        Returns:
+        TBD
+        """
+
+        historical_price = self.get_historical_data(pairing, candle_interval, limit);
+
+        if price_type == 0:
+            historical_price.drop(historical_price.columns[[0, 2, 3, 4, 5, 6]], axis=1, inplace=True)
+
+        return historical_price
+
     def _get(self, path, params):
         url = "%s?%s" % (path, urlencode(params))
         return requests.get(url, timeout=30, verify=False).json()
+ 
