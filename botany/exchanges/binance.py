@@ -92,8 +92,12 @@ class Binance:
 
         historical_price = self.get_historical_data(pairing, candle_interval, limit);
 
-        if price_type == 0:
-            historical_price.drop(historical_price.columns[[0, 2, 3, 4, 5, 6]], axis=1, inplace=True)
+        #if price_type < 4 or price_type < 0:
+        #    return "ERROR"
+
+        historical_price = historical_price[[price_type]]
+        
+        #historical_price.drop(historical_price.columns[[0, 2, 3, 4, 5, 6]], axis=1, inplace=True)
 
         return historical_price
 

@@ -4,7 +4,6 @@ import sys
 import config
 import os
 
-from analysis.metrics import Metrics
 from exchanges.binance import Binance
 from indicators.sma import SimpleMovingAverage
 
@@ -14,16 +13,16 @@ API_SECRET = config.BINANCE['api_secret']
 class Botany():
     binance = Binance(API_KEY, API_SECRET)
     ticks = 25;
-    price = binance.get_historical_price('BTCUSDT', '5m', ticks, 0) 
+    price1 = binance.get_historical_price('BTCUSDT', '5m', 25, 'Close') 
+    price2 = binance.get_historical_price('BTCUSDT', '5m', 25, 'Open') 
 
-    #TODO: Make it pretty
     def pretty_print(message):
-        return message.center(os.get_terminal_size().columns)
+        message = str(message).center(os.get_terminal_size().columns, '=')
+        return message
 
-    print(binance.check_connection())
     print(binance.get_historical_data('BTCUSDT', '5m', 1))
-    print(pretty_print('SMA(' + str(ticks) + ')'))
-    print(SimpleMovingAverage.get_sma(price, ticks))
+    print(pretty_print(' SMA(' + str(ticks) + ') '))
+    print(SimpleMovingAverage.get_sma(price1, ticks))
+    print(SimpleMovingAverage.get_sma(price2, ticks))
     print(binance.get_latest_price('BTCUSDT'))
     print(binance.cur_avg_price('BTCUSDT'))
-
