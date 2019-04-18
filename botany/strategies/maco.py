@@ -11,7 +11,7 @@ class Maco:
     When the line crosses we detect a potential change of trend.
 
     Args:
-    pairing (str): Symbol pair to operate on i.e BTCUSDT
+    pairings (str): Symbol pair to operate on i.e BTCUSDT
     candle_interval (str): Trading time frame i.e 5m or 4h
     short_ma (int): Number of candles for short period
     long_ma (int): Number of candles for long period
@@ -34,14 +34,14 @@ class Maco:
         signals = pd.DataFrame(index=self.candle_interval.index)
         signals['signal'] = 0.0
 
-        signals['short_ma'] = pd.rolling_mean(candle_interval['Close'], self.short_ma, min_periods=1)
-        signals['long_ma'] = pd.rolling_mean(candle_interval['Close'], self.long_ma, min_periods=1)
+        signals['short_ma'] = self.candle_interval['Close'].rolling(self.short_ma, min_periods=1).mean()
+        signals['long_ma'] = self.candle_interval['Close'].rolling(self.long_ma, min_periods=1).mean()
 
         """
         Creates a signal when the short MA period crosses the long MA period from below.
         """
         signals['signal'][self.short_ma:] = np.where(signals['short_ma'][self.short_ma:]
-                                                    > signals['long_ma'][self.short_ma:], 1.0, 0.0)
+                                                     > signals['long_ma'][self.short_ma:], 1.0, 0.0)
 
         signals['positions'] = signals['signal'].diff()
 

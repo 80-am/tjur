@@ -12,17 +12,17 @@ API_SECRET = config.BINANCE['api_secret']
 
 class Botany():
     binance = Binance(API_KEY, API_SECRET)
+    symbol = 'BTCUSDT'
     ticks = 25;
-    price1 = binance.get_historical_price('BTCUSDT', '5m', 25, 'Close') 
-    price2 = binance.get_historical_price('BTCUSDT', '5m', 25, 'Open') 
+    price1 = binance.get_historical_price(symbol, '5m', 25, 'Close') 
+    price2 = binance.get_historical_price(symbol, '5m', 25, 'Open') 
 
-    def pretty_print(message):
-        message = str(message).center(os.get_terminal_size().columns, '=')
-        return message
+    def pretty_print(title, message):
+        title = str(title).center(os.get_terminal_size().columns, '=')
+        pretty_print = title + '\n' + str(message)
+        print(pretty_print)
+        print('')
 
-    print(binance.get_historical_data('BTCUSDT', '5m', 1))
-    print(pretty_print(' SMA(' + str(ticks) + ') '))
-    print(SimpleMovingAverage.get_sma(price1, ticks))
-    print(SimpleMovingAverage.get_sma(price2, ticks))
-    print(binance.get_latest_price('BTCUSDT'))
-    print(binance.cur_avg_price('BTCUSDT'))
+    pretty_print(' SMA(' + str(ticks) + ') ', SimpleMovingAverage.get_sma(price1, ticks))
+    pretty_print(' Latest Price for ' + symbol + ' ', binance.get_latest_price(symbol))
+    pretty_print(' Current Price for ' + symbol + ' ', binance.cur_avg_price(symbol))
