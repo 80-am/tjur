@@ -15,7 +15,7 @@ class Maco:
     candle_interval (str): Trading time frame i.e 5m or 4h
     short_ma (int): Number of candles for short period
     long_ma (int): Number of candles for long period
-    price_type (int): Type of price (OHLC) i.e 2 as in High or 4 as in Close
+    price_type (str): Type of price (OHLC) i.e High or Close
     """
 
     def __init__(self, pairings, candle_interval, short_ma, long_ma, price_type):
@@ -31,17 +31,22 @@ class Maco:
         pandas.DataFrame: 1 for long, -1 for short or 0 for hold.
         """
 
-        signals = pd.DataFrame(index=self.candle_interval.index)
-        signals['signal'] = 0.0
+        signals = pd.DataFrame()
+        signals['signal'] = 0
+        
+        signals['short_ma'] = self.short_ma[self.price_type]
+        signals['long_ma'] = self.long_ma[self.price_type]
 
-        signals['short_ma'] = self.candle_interval['Close'].rolling(self.short_ma, min_periods=1).mean()
-        signals['long_ma'] = self.candle_interval['Close'].rolling(self.long_ma, min_periods=1).mean()
+        #signals['short_ma_mean'] = self.short_ma[self.price_type].rolling(self.short_ma, min_periods=1).mean()
+        #signals['long_ma_mean'] = self.long_ma[self.price_type].rolling(self.long_ma, min_periods=1).mean()
 
         """
         Creates a signal when the short MA period crosses the long MA period from below.
         """
-        signals['signal'][self.short_ma:] = np.where(signals['short_ma'][self.short_ma:]
-                                                     > signals['long_ma'][self.short_ma:], 1.0, 0.0)
+        #signals['signal'][self.short_ma:] = np.where(signals['short_ma'][self.short_ma:]
+        #                                             > signals['long_ma'][self.short_ma:], 1.0, 0.0)
+
+        signals['signal'] = np.where(signals['short_ma'] > signals['long_ma'], 1.0, 0.0)
 
         signals['positions'] = signals['signal'].diff()
 
