@@ -3,6 +3,8 @@ import os
 import numpy as np
 import pandas as pd
 
+from indicators.sma import SimpleMovingAverage
+
 class Maco:
     """
     Moving Average(MA) Cross-Over strategy.
@@ -33,18 +35,20 @@ class Maco:
 
         signals = pd.DataFrame()
         signals['signal'] = 0
-        
-        signals['short_ma'] = self.short_ma[self.price_type]
-        signals['long_ma'] = self.long_ma[self.price_type]
 
-        #signals['short_ma_mean'] = self.short_ma[self.price_type].rolling(self.short_ma, min_periods=1).mean()
-        #signals['long_ma_mean'] = self.long_ma[self.price_type].rolling(self.long_ma, min_periods=1).mean()
+
+        sma_short = SimpleMovingAverage.get_sma(self.short_ma[self.price_type], 25)
+        sma_long = SimpleMovingAverage.get_sma(self.long_ma[self.price_type], 50)
+
+        signals['short_ma'] = sma_short
+        signals['long_ma'] = sma_long
+
 
         """
         Creates a signal when the short MA period crosses the long MA period from below.
+
+        TODO:
         """
-        #signals['signal'][self.short_ma:] = np.where(signals['short_ma'][self.short_ma:]
-        #                                             > signals['long_ma'][self.short_ma:], 1.0, 0.0)
 
         signals['signal'] = np.where(signals['short_ma'] > signals['long_ma'], 1.0, 0.0)
 

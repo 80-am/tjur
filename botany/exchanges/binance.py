@@ -96,7 +96,7 @@ class Binance:
         #    return "ERROR"
 
         historical_price = historical_price[[price_type]]
-        
+
         #historical_price.drop(historical_price.columns[[0, 2, 3, 4, 5, 6]], axis=1, inplace=True)
 
         return historical_price
@@ -104,4 +104,4 @@ class Binance:
     def _get(self, path, params):
         url = "%s?%s" % (path, urlencode(params))
         return requests.get(url, timeout=30, verify=False).json()
- 
+

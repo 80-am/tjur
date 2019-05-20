@@ -8,6 +8,6 @@ class SimpleMovingAverage:
         our_range = range(len(price))[j + period - 1:]
         empty_list = [None] * (j + period - 1)
         sub_result = [np.mean(price[i - period + 1: i + 1]) for i in our_range]
-                      
-        return np.array(sub_result)
+
+        return np.array(sub_result, dtype = float)
 
