@@ -3,7 +3,10 @@ import os
 import numpy as np
 import pandas as pd
 
-from indicators.sma import SimpleMovingAverage
+from exchanges.binance import Binance
+from indicators.ma import MovingAverages
+
+binance = Binance('apikey', 'apisecret')
 
 class Maco:
     """
@@ -13,45 +16,68 @@ class Maco:
     When the line crosses we detect a potential change of trend.
 
     Args:
-    pairings (str): Symbol pair to operate on i.e BTCUSDT
+    ma_type (str): Type of moving average i.e EMA or SMA
+    symbol (str): Symbol pair to operate on i.e BTCUSDT
     candle_interval (str): Trading time frame i.e 5m or 4h
-    short_ma (int): Number of candles for short period
-    long_ma (int): Number of candles for long period
-    price_type (str): Type of price (OHLC) i.e High or Close
+    short_ticks (int): Number of candles for short period
+    long_ticks (int): Number of candles for long period
+    TODO: price_type (str): Type of price (OHLC) i.e High or Close
     """
 
-    def __init__(self, pairings, candle_interval, short_ma, long_ma, price_type):
-        self.pairings = pairings
+    def __init__(self, ma_type, symbol, candle_interval, short_ticks, long_ticks):
+        self.ma_type = ma_type.lower()
+        self.symbol = symbol
         self.candle_interval = candle_interval
-        self.short_ma = short_ma
-        self.long_ma = long_ma
-        self.price_type = price_type
+        self.short_ticks= short_ticks
+        self.long_ticks = long_ticks
 
-    def calculate_signals(self):
+    def calculate_golden_cross(self):
         """
+        Golden Cross (Bullish Signal).
+
+        The golden cross appears when a symbols short-term MA
+        crosses its long-term MA from below.
+
         Returns:
-        pandas.DataFrame: 1 for long, -1 for short or 0 for hold.
+        True or False (Boolean)
         """
 
-        signals = pd.DataFrame()
-        signals['signal'] = 0
+        short_ma_price = binance.get_historical_price(self.symbol, self.candle_interval, self.short_ticks)
+        long_ma_price = binance.get_historical_price(self.symbol, self.candle_interval, self.long_ticks)
+        if (self.ma_type == 'sma'):
+            short_ma = MovingAverages.get_sma(short_ma_price, self.short_ticks)
+            long_ma = MovingAverages.get_sma(long_ma_price, self.long_ticks)
+        elif (self.ma_type == 'ema'):
+            short_ma = MovingAverages.get_ema(short_ma_price, self.short_ticks)
+            long_ma = MovingAverages.get_ema(long_ma_price, self.long_ticks)
+        else:
+            print('Please use a supported moving average')
 
+        if short_ma > long_ma:
+            return True
 
-        sma_short = SimpleMovingAverage.get_sma(self.short_ma[self.price_type], 25)
-        sma_long = SimpleMovingAverage.get_sma(self.long_ma[self.price_type], 50)
-
-        signals['short_ma'] = sma_short
-        signals['long_ma'] = sma_long
-
-
+    def calculate_death_cross(self):
         """
-        Creates a signal when the short MA period crosses the long MA period from below.
+        Death Cross (Bearish Signal).
 
-        TODO:
+        The death cross appears when a symbols short-term SMA
+        crosses its long-term SMA from above.
+
+        Returns:
+        True or False (Boolean)
         """
 
-        signals['signal'] = np.where(signals['short_ma'] > signals['long_ma'], 1.0, 0.0)
+        short_ma_price = binance.get_historical_price(self.symbol, self.candle_interval, self.short_ticks)
+        long_ma_price = binance.get_historical_price(self.symbol, self.candle_interval, self.long_ticks)
+        if (self.ma_type == 'sma'):
+            short_ma = MovingAverages.get_sma(short_ma_price, self.short_ticks)
+            long_ma = MovingAverages.get_sma(long_ma_price, self.long_ticks)
+        elif (self.ma_type == 'ema'):
+            short_ma = MovingAverages.get_ema(short_ma_price, self.short_ticks)
+            long_ma = MovingAverages.get_ema(long_ma_price, self.long_ticks)
+        else:
+            print('Please use a supported moving average')
 
-        signals['positions'] = signals['signal'].diff()
+        if long_ma > short_ma:
+            return True
 
-        return signals

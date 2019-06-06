@@ -77,27 +77,22 @@ class Binance:
 
         return df
 
-    def get_historical_price(self, pairing, candle_interval, limit, price_type):
+    def get_historical_price(self, pairing, candle_interval, limit):
 
         """
         Args:
         pairing (str): Symbol pair to operate on i.e BTCUSDT
         candle_interval (str): Trading time frame i.e 5m or 4h
         limit (int, optional): Number of ticks to return. Default 500; Max 1000 
-        price_type (int): Type of price (OHLC) i.e 2 as in High or 4 as in Close
+        TODO: price_type (int): Type of price (OHLC) i.e 2 as in High or 4 as in Close
 
         Returns:
         TBD
         """
 
-        historical_price = self.get_historical_data(pairing, candle_interval, limit);
+        historical_price = self.get_historical_data(pairing, candle_interval, limit)
 
-        #if price_type < 4 or price_type < 0:
-        #    return "ERROR"
-
-        historical_price = historical_price[[price_type]]
-
-        #historical_price.drop(historical_price.columns[[0, 2, 3, 4, 5, 6]], axis=1, inplace=True)
+        historical_price = historical_price[['Close']]
 
         return historical_price
 
