@@ -3,3 +3,4 @@ config.py
 *.swp
 *.smp
 *.log
+.DS_Store

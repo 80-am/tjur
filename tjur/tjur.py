@@ -10,7 +10,7 @@ from exchanges.binance import Binance
 from indicators.ma import MovingAverages
 from strategies.maco import Maco
 
-logging.basicConfig(filename='botany/log/botany.log', format='%(asctime)s %(message)s',datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+logging.basicConfig(filename='tjur/log/tjur.log', format='%(asctime)s %(message)s',datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
 API_KEY = config.BINANCE['api_key']
 API_SECRET = config.BINANCE['api_secret']
@@ -18,8 +18,8 @@ API_SECRET = config.BINANCE['api_secret']
 binance = Binance(API_KEY, API_SECRET)
 symbol = 'BTCUSDT'
 
-class Botany:
-    print('Botany started.')
+class Tjur:
+    print('Tjur started.')
     print('Start time(UTC): ' + str(datetime.datetime.utcnow()))
     print('Trading ' + symbol)
     binance = Binance(API_KEY, API_SECRET)
@@ -49,7 +49,8 @@ class Botany:
 
             while (buy_signal == 1):
                 latest_price = float(binance.get_latest_price(symbol)['price'])
-                if latest_price > buy_order or latest_price > sell_out:
+                death_cross = m.calculate_death_cross()
+                if death_cross or latest_price > sell_out:
                     sell_order = latest_price
                     print('Sold at: ' + str(sell_order))
                     print(datetime.datetime.utcnow())
