@@ -16,13 +16,37 @@ API_KEY = config.BINANCE['api_key']
 API_SECRET = config.BINANCE['api_secret']
 
 binance = Binance(API_KEY, API_SECRET)
-symbol = 'BTCUSDT'
 
 class Tjur:
-    print('Tjur started.')
+    with open('tjur/assets/start-up.txt', 'r') as f:
+        print(f.read())
     print('Start time(UTC): ' + str(datetime.datetime.utcnow()))
-    print('Trading ' + symbol)
     binance = Binance(API_KEY, API_SECRET)
+
+    symbol = input("Select symbol to pair: ").upper()
+    time_frame = input('Enter time frame: ').lower()
+    short_term = int(input('Select short-term period: '))
+    long_term = int(input('Select long-term period: '))
+    def validate_inputs(symbol, time_frame, short_term, long_term):
+        check_symbol = str(binance.cur_avg_price(symbol))
+        if ('Invalid symbol' in check_symbol):
+            print('Invalid symbol')
+            print('Exiting')
+            sys.exit()
+
+        if (short_term <= 0 or long_term <= 0):
+            print(short_term)
+            print('Invalid period')
+            print('Exiting')
+            sys.exit()
+
+        if not (time_frame in {'1m', '3m', '5m', '15m', '30m', '45m',
+                              '1h', '2h', '3h', '4h', '1d', '1w', '1mo'}):
+            print('Invalid time frame')
+            print('Exiting')
+            sys.exit()
+    validate_inputs(symbol, time_frame, short_term, long_term)
+    print('Trading ' + symbol)
 
     def pretty_print(title, message):
         title = str(title).center(os.get_terminal_size().columns, '=')
@@ -30,9 +54,10 @@ class Tjur:
         print(pretty_print)
         print('')
 
-    def test_out_maco():
 
-        m = Maco('sma', 'BTCUSDT', '4h', 21, 50)
+    def test_out_maco(symbol, time_frame, short_term, long_term):
+
+        m = Maco('sma', symbol, time_frame, short_term, long_term)
         golden_cross = m.calculate_golden_cross()
 
         buy_signal = 0
@@ -63,7 +88,7 @@ class Tjur:
 
     try:
         while True:
-            test_out_maco()
+            test_out_maco(symbol, time_frame, short_term, long_term)
 
     except KeyboardInterrupt:
         print(binance.get_latest_price(symbol)['price'])

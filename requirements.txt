@@ -1,0 +1,7 @@
+numpy==1.16.3
+pandas==0.24.2
+pandas-datareader==0.7.0
+python-dateutil==2.7.3
+requests==2.19.1
+requests-file==1.4.3
+urllib3==1.23
