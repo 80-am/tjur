@@ -45,7 +45,6 @@ class Binance:
 
     # Kline/candlestick bars for a symbol. Klines are uniquely identified by their open time.
     def get_historical_data(self, pairing, candle_interval, limit):
-
         """
         Args:
         pairing (str): Symbol pair to operate on i.e BTCUSDT

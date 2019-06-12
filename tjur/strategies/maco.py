@@ -53,7 +53,7 @@ class Maco:
         else:
             print('Please use a supported moving average')
 
-        if short_ma > long_ma:
+        if (short_ma > long_ma):
             return True
 
     def calculate_death_cross(self):
