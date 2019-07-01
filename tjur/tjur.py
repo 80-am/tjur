@@ -1,14 +1,17 @@
 import sys
+import os
 
 import config
 import datetime
 import logging
 
 from exchanges.binance import Binance
-from indicators.ma import MovingAverages
 from strategies.maco import Maco
+from strategies.doublecross import DoubleCross
 
-logging.basicConfig(filename='tjur/log/tjur.log', format='%(asctime)s %(message)s',datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+tjur_path = sys.argv[0]
+tjur_dir = os.path.dirname(tjur_path)
+logging.basicConfig(filename=tjur_dir + '/log/tjur.log', format='%(asctime)s %(message)s',datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
 API_KEY = config.BINANCE['api_key']
 API_SECRET = config.BINANCE['api_secret']
@@ -16,17 +19,33 @@ API_SECRET = config.BINANCE['api_secret']
 binance = Binance(API_KEY, API_SECRET)
 
 class Tjur:
-    with open('tjur/assets/start-up.txt', 'r') as f:
+    with open(tjur_dir +'/assets/start-up.txt', 'r') as f:
         print(f.read())
     print('Start time(UTC): ' + str(datetime.datetime.utcnow()))
     binance = Binance(API_KEY, API_SECRET)
 
     symbol = input("Select symbol to pair: ").upper()
-    time_frame = input('Enter time frame: ').lower()
-    short_term = int(input('Select short-term period: '))
-    long_term = int(input('Select long-term period: '))
+    print("Available strategies:")
+    print("[1] Moving Average Cross Over")
+    print("[2] MACD Double-cross")
+    strategy =  int(input("Select strategy: "))
+
+    if (strategy == 1):
+        custom_parameters = input("Use custom parameters? [y/N] ").lower()
+    else:
+        custom_parameters = 'n'
+
+    if (custom_parameters == 'y'):
+        time_frame = input('Enter time frame: ').lower()
+        short_term = int(input('Select short-term period: '))
+        long_term = int(input('Select long-term period: '))
+    else:
+        time_frame = '5m'
+        short_term = 12
+        long_term = 26
 
     check_symbol = str(binance.cur_avg_price(symbol))
+
     if ('Invalid symbol' in check_symbol):
         print('Invalid symbol')
         print('Exiting')
@@ -41,11 +60,18 @@ class Tjur:
         print('Invalid time frame')
         print('Exiting')
         sys.exit()
+    if (strategy == 1):
+        strategy = Maco('sma', symbol, time_frame, short_term, long_term)
+    elif (strategy == 2):
+        strategy = DoubleCross('ema', symbol, time_frame, short_term, long_term)
+    else:
+        print('Invalid strategy')
+        print('Exiting')
+        sys.exit()
 
-    strategy = Maco('sma', symbol, time_frame, short_term, long_term)
     print('Trading ' + symbol)
 
-    def calculate_signals(strategy, symbol):
+    def calculate_signals(strategy, symbol, time_frame):
         """
         Calculates when to send signal to buy or sell
 
@@ -55,9 +81,8 @@ class Tjur:
        -1 (int): Signal to sell
         """
 
-        golden_cross = strategy.calculate_golden_cross()
         signal = 0
-        if (golden_cross and signal == 0):
+        if (strategy.calculate_buy_signal() and signal == 0):
             buy_order = float(binance.get_latest_price(symbol)['price'])
             take_profit = buy_order * 1.16
             signal = 1
@@ -68,10 +93,10 @@ class Tjur:
             while (signal == 1):
                 latest_price = float(binance.get_latest_price(symbol)['price'])
                 stop_loss = buy_order * 0.84
-                death_cross = strategy.calculate_death_cross()
+                sell_signal = strategy.calculate_sell_signal()
 
-                if (death_cross and stop_loss > latest_price
-                        or death_cross and latest_price > buy_order * 1.08
+                if (sell_signal and stop_loss > latest_price
+                        or sell_signal and latest_price > buy_order * 1.08
                         or take_profit < latest_price):
                     sell_order = latest_price
                     print('Sold at: ' + str(sell_order))
@@ -85,7 +110,7 @@ class Tjur:
 
     try:
         while True:
-            calculate_signals(strategy, symbol)
+            calculate_signals(strategy, symbol, time_frame)
 
     except KeyboardInterrupt:
         print(binance.get_latest_price(symbol)['price'])

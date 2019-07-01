@@ -31,7 +31,7 @@ class Maco:
         self.short_ticks= short_ticks
         self.long_ticks = long_ticks
 
-    def calculate_golden_cross(self):
+    def calculate_buy_signal(self):
         """
         Golden Cross (Bullish Signal).
 
@@ -56,7 +56,7 @@ class Maco:
         if (short_ma > long_ma):
             return True
 
-    def calculate_death_cross(self):
+    def calculate_sell_signal(self):
         """
         Death Cross (Bearish Signal).
 

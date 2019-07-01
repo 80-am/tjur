@@ -14,6 +14,7 @@ class Binance:
     BASE_V3_URL = "https://www.api.binance.com/api/v3"
     PUBLIC_URL = "https://www.binance.com/exchange/public/product"
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    pd.set_option('display.max_colwidth', -1)
 
     def __init__(self, key, secret):
         self.key = key
@@ -49,10 +50,10 @@ class Binance:
         Args:
         pairing (str): Symbol pair to operate on i.e BTCUSDT
         candle_interval (str): Trading time frame i.e 5m or 4h
-        limit (int, optional): Number of ticks to return. Default 500; Max 1000 
+        limit (int, optional): Number of ticks to return. Default 500; Max 1000
 
         Returns:
-        pandas.DataFrame: Open time, Open, High, Low, Close, Volume, Close time 
+        pandas.DataFrame: Open time, Open, High, Low, Close, Volume, Close time
         """
 
         if not candle_interval:
@@ -86,7 +87,7 @@ class Binance:
         TODO: price_type (int): Type of price (OHLC) i.e 2 as in High or 4 as in Close
 
         Returns:
-        TBD
+        pandas.DataFrame: Price
         """
 
         historical_price = self.get_historical_data(pairing, candle_interval, limit)
