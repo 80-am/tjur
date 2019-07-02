@@ -18,16 +18,16 @@ class Maco:
     Args:
     ma_type (str): Type of moving average i.e EMA or SMA
     symbol (str): Symbol pair to operate on i.e BTCUSDT
-    candle_interval (str): Trading time frame i.e 5m or 4h
+    time_frame (str): Trading time frame i.e 5m or 4h
     short_ticks (int): Number of candles for short period
     long_ticks (int): Number of candles for long period
     TODO: price_type (str): Type of price (OHLC) i.e High or Close
     """
 
-    def __init__(self, ma_type, symbol, candle_interval, short_ticks, long_ticks):
+    def __init__(self, ma_type, symbol, time_frame, short_ticks, long_ticks):
         self.ma_type = ma_type.lower()
         self.symbol = symbol
-        self.candle_interval = candle_interval
+        self.time_frame = time_frame
         self.short_ticks= short_ticks
         self.long_ticks = long_ticks
 
@@ -39,11 +39,11 @@ class Maco:
         crosses its long-term MA from below.
 
         Returns:
-        True or False (Boolean)
+        bool
         """
 
-        short_ma_price = binance.get_historical_price(self.symbol, self.candle_interval, self.short_ticks)
-        long_ma_price = binance.get_historical_price(self.symbol, self.candle_interval, self.long_ticks)
+        short_ma_price = binance.get_historical_price(self.symbol, self.time_frame, self.short_ticks)
+        long_ma_price = binance.get_historical_price(self.symbol, self.time_frame, self.long_ticks)
         if (self.ma_type == 'sma'):
             short_ma = MovingAverages.get_sma(short_ma_price, self.short_ticks)
             long_ma = MovingAverages.get_sma(long_ma_price, self.long_ticks)
@@ -64,11 +64,11 @@ class Maco:
         crosses its long-term SMA from above.
 
         Returns:
-        True or False (Boolean)
+        bool
         """
 
-        short_ma_price = binance.get_historical_price(self.symbol, self.candle_interval, self.short_ticks)
-        long_ma_price = binance.get_historical_price(self.symbol, self.candle_interval, self.long_ticks)
+        short_ma_price = binance.get_historical_price(self.symbol, self.time_frame, self.short_ticks)
+        long_ma_price = binance.get_historical_price(self.symbol, self.time_frame, self.long_ticks)
         if (self.ma_type == 'sma'):
             short_ma = MovingAverages.get_sma(short_ma_price, self.short_ticks)
             long_ma = MovingAverages.get_sma(long_ma_price, self.long_ticks)

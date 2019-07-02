@@ -7,7 +7,7 @@ import logging
 
 from exchanges.binance import Binance
 from strategies.maco import Maco
-from strategies.doublecross import DoubleCross
+from strategies.macd import Macd
 
 tjur_path = sys.argv[0]
 tjur_dir = os.path.dirname(tjur_path)
@@ -27,15 +27,15 @@ class Tjur:
     symbol = input("Select symbol to pair: ").upper()
     print("Available strategies:")
     print("[1] Moving Average Cross Over")
-    print("[2] MACD Double-cross")
-    strategy =  int(input("Select strategy: "))
+    print("[2] Moving Average Convergence/Divergence (MACD)")
+    strategy = int(input("Select strategy: "))
 
     if (strategy == 1):
-        custom_parameters = input("Use custom parameters? [y/N] ").lower()
+        custom = input("Use custom parameters? [y/N] ").lower()
     else:
-        custom_parameters = 'n'
+        custom = 'n'
 
-    if (custom_parameters == 'y'):
+    if (custom == 'y'):
         time_frame = input('Enter time frame: ').lower()
         short_term = int(input('Select short-term period: '))
         long_term = int(input('Select long-term period: '))
@@ -45,7 +45,6 @@ class Tjur:
         long_term = 26
 
     check_symbol = str(binance.cur_avg_price(symbol))
-
     if ('Invalid symbol' in check_symbol):
         print('Invalid symbol')
         print('Exiting')
@@ -63,7 +62,7 @@ class Tjur:
     if (strategy == 1):
         strategy = Maco('sma', symbol, time_frame, short_term, long_term)
     elif (strategy == 2):
-        strategy = DoubleCross('ema', symbol, time_frame, short_term, long_term)
+        strategy = Macd(symbol, time_frame)
     else:
         print('Invalid strategy')
         print('Exiting')
