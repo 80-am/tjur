@@ -3,16 +3,16 @@ import sys
 import time
 
 import config
-import datetime
 import logging
 
+from datetime import datetime
 from exchanges.binance import Binance
 from strategies.maco import Maco
 from strategies.macd import Macd
 
 tjur_path = sys.argv[0]
 tjur_dir = os.path.dirname(tjur_path)
-logging.basicConfig(filename=tjur_dir + '/log/tjur.log', format='%(asctime)s.%(msecs)06d %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
+logging.basicConfig(filename=tjur_dir + '/log/tjur-' + str(datetime.timestamp(datetime.utcnow())) + '.log', format='%(asctime)s.%(msecs)06d %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
 logging.Formatter.converter = time.gmtime
 
 API_KEY = config.BINANCE['api_key']
@@ -23,7 +23,7 @@ binance = Binance(API_KEY, API_SECRET)
 class Tjur:
     with open(tjur_dir +'/assets/start-up.txt', 'r') as f:
         print(f.read())
-    print('Start time(UTC): ' + str(datetime.datetime.utcnow()))
+    print('Start time(UTC): ' + str(datetime.utcnow()))
     binance = Binance(API_KEY, API_SECRET)
 
     symbol = input("Select symbol to pair: ").upper()
@@ -88,7 +88,7 @@ class Tjur:
             take_profit = buy_order * 1.16
             signal = 1
             print('Buying at: ' + str(buy_order))
-            print(datetime.datetime.utcnow())
+            print(datetime.utcnow())
             logging.info('Buying at: ' + str(buy_order))
 
             while (signal == 1):
@@ -102,7 +102,7 @@ class Tjur:
                         or take_profit < latest_price):
                     sell_order = latest_price
                     print('Sold at: ' + str(sell_order))
-                    print(datetime.datetime.utcnow())
+                    print(datetime.utcnow())
                     logging.info('Sold at: ' + str(sell_order))
 
                     win_loss = float(sell_order) / float(buy_order)
