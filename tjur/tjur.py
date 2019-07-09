@@ -12,7 +12,8 @@ from strategies.macd import Macd
 
 tjur_path = sys.argv[0]
 tjur_dir = os.path.dirname(tjur_path)
-logging.basicConfig(filename=tjur_dir + '/log/tjur.log', format='%(asctime)s %(message)s',datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+logging.basicConfig(filename=tjur_dir + '/log/tjur.log', format='%(asctime)s.%(msecs)06d %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
+logging.Formatter.converter = time.gmtime
 
 API_KEY = config.BINANCE['api_key']
 API_SECRET = config.BINANCE['api_secret']
