@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+import time
 
 import config
 import datetime
@@ -90,6 +91,7 @@ class Tjur:
             logging.info('Buying at: ' + str(buy_order))
 
             while (signal == 1):
+                time.sleep(0.01)
                 latest_price = float(binance.get_latest_price(symbol)['price'])
                 stop_loss = buy_order * 0.84
                 sell_signal = strategy.calculate_sell_signal()
