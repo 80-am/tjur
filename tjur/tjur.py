@@ -6,6 +6,7 @@ import config
 import logging
 
 from datetime import datetime
+from analysis.performance import Performance
 from exchanges.binance import Binance
 from strategies.maco import Maco
 from strategies.macd import Macd
@@ -99,15 +100,15 @@ class Tjur:
 
                 if (sell_signal and stop_loss > latest_price
                         or sell_signal and latest_price > buy_order * 1.08
-                        or take_profit < latest_price):
+                        or latest_price > take_profit):
                     sell_order = latest_price
                     print('Sold at: ' + str(sell_order))
                     print(datetime.utcnow())
                     logging.info('Sold at: ' + str(sell_order))
+                    pl = Performance.calculate_pl(buy_order, sell_order)
+                    print('Margin: ' + str(round(pl, 2)) + '%')
+                    logging.info('Margin: ' + str(round(pl, 2)) + '%')
 
-                    win_loss = float(sell_order) / float(buy_order)
-                    print('Win / Lost: ' + str(win_loss))
-                    logging.info('Win / Lost: ' + str(win_loss))
                     signal = 0
 
     try:
