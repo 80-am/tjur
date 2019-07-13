@@ -156,6 +156,7 @@ class Binance:
 
     def _get(self, path, params):
         url = "%s?%s" % (path, urlencode(params))
+        time.sleep(0.01)
         return requests.get(url, timeout=30, verify=False).json()
 
     def _post(self, path, params):
