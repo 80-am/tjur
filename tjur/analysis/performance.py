@@ -8,7 +8,7 @@ class Performance():
         float
         """
 
-        gross_profit = buy_price - sell_price
+        gross_profit = sell_price - buy_price
         margin = (gross_profit / sell_price) * 100
 
         return margin

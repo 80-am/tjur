@@ -2,6 +2,6 @@
 
 # Enter your API secrets
 BINANCE = {
-    'api_key': '123456789',
-    'api_secret': 'secret'
+    'api_key': 'YOUR_API_KEY',
+    'api_secret': 'YOUR_API_SECRET'
 }
