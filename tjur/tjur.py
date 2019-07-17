@@ -105,8 +105,8 @@ class Tjur:
                     print(datetime.utcnow())
                     logging.info('Sold at: ' + str(sell_order))
                     pl = Performance.calculate_pl(buy_order, sell_order)
-                    print('Margin: ' + str(round(pl, 2)) + '%')
-                    logging.info('Margin: ' + str(round(pl, 2)) + '%')
+                    print('Margin: ' + str(round(pl, 3)) + '%')
+                    logging.info('Margin: ' + str(round(pl, 3)) + '%')
 
                     signal = 0
 
