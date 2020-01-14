@@ -39,10 +39,22 @@ class Tjur:
         custom = 'n'
 
     if (custom == 'y'):
+        print("Available moving averages:")
+        print("[1] Simple Moving Average (SMA)")
+        print("[2] Exponential Moving Average (EMA)")
+        average = int(input("Select average: "))
+        if (average == 1):
+            average = 'sma'
+        elif (average == 2):
+            average = 'ema'
+        else:
+            average = int(input("Select average: "))
+
         time_frame = input('Enter time frame: ').lower()
         short_term = int(input('Select short-term period: '))
         long_term = int(input('Select long-term period: '))
     else:
+        average = 'sma'
         time_frame = '5m'
         short_term = 12
         long_term = 26
@@ -63,7 +75,7 @@ class Tjur:
         print('Exiting')
         sys.exit()
     if (strategy == 1):
-        strategy = Maco('sma', symbol, time_frame, short_term, long_term)
+        strategy = Maco(average, symbol, time_frame, short_term, long_term)
     elif (strategy == 2):
         strategy = Macd(symbol, time_frame)
     else:
@@ -119,4 +131,3 @@ class Tjur:
         print('Exiting')
         logging.warning('Exiting')
         sys.exit()
-

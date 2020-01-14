@@ -42,8 +42,6 @@ class Macd:
 
         if (macd > macd_signal and prev_macd < prev_macd_signal):
             return True
-        else:
-            return False
 
     def calculate_sell_signal(self):
         """
@@ -61,8 +59,5 @@ class Macd:
         macd = float(df['macd'].tail(1))
         macd_signal = float(df['macdsignal'].tail(1))
 
-        if (macd < macd_signal): 
+        if (macd < macd_signal):
             return True
-        else:
-            return False
-

@@ -60,8 +60,8 @@ class Maco:
         """
         Death Cross (Bearish Signal).
 
-        The death cross appears when a symbols short-term SMA
-        crosses its long-term SMA from above.
+        The death cross appears when a symbols short-term MA
+        crosses its long-term MA from above.
 
         Returns:
         bool
@@ -80,4 +80,3 @@ class Maco:
 
         if long_ma > short_ma:
             return True
-

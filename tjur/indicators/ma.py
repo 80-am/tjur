@@ -18,4 +18,3 @@ class MovingAverages:
         df = df.ewm(span=period,min_periods=period -1,adjust=False,ignore_na=False).mean()
 
         return np.array(df.tail(1), dtype = float)
-

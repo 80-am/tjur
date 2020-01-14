@@ -1,11 +1,12 @@
-from urllib.parse import urlencode
-
 import datetime
 import json
 import pandas as pd
 import requests
 import time
 import urllib3
+
+from urllib.parse import urlencode
+from requests.exceptions import Timeout
 
 # Interface to Binance public Rest API
 class Binance:
@@ -74,7 +75,7 @@ class Binance:
         if not candle_interval:
             candle_interval = '4h'
         if not limit or limit > 1000:
-            limit = 500 
+            limit = 500
 
         path = "%s/klines" % self.BASE_URL
         params = {"symbol": symbol,
@@ -97,7 +98,7 @@ class Binance:
         Args:
         symbol (str): Symbol pair to operate on i.e BTCUSDT
         candle_interval (str): Trading time frame i.e 5m or 4h
-        limit (int, optional): Number of ticks to return. Default 500; Max 1000 
+        limit (int, optional): Number of ticks to return. Default 500; Max 1000
         TODO: price_type (int): Type of price (OHLC) i.e 2 as in High or 4 as in Close
 
         Returns:
@@ -155,13 +156,16 @@ class Binance:
         return self._post(path, params)
 
     def _get(self, path, params):
-        url = "%s?%s" % (path, urlencode(params))
-        init_request = requests.get(url, timeout=30, verify=False)
-        request = init_request.json()
-        init_request.close()
-        return request
+        try:
+            url = "%s?%s" % (path, urlencode(params))
+            init_request = requests.get(url, timeout=30, verify=False)
+            request = init_request.json()
+            init_request.close()
+            return request
+        except: Timeout
+        print('Exception', url)
+        pass
 
     def _post(self, path, params):
         url = "%s?%s" % (path, urlencode(params))
         return requests.post(url)
-
