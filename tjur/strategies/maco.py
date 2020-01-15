@@ -80,3 +80,15 @@ class Maco:
 
         if long_ma > short_ma:
             return True
+
+    def is_ready(self):
+        """
+        Checking if strategy should start sending signals.
+
+        If short-term MA is above long-term when initialized, dont start trading.
+
+        Returns:
+        bool
+        """
+
+        return self.calculate_sell_signal()

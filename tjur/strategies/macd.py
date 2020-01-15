@@ -61,3 +61,14 @@ class Macd:
 
         if (macd < macd_signal):
             return True
+
+    # TODO: Add validation
+    def is_ready(self):
+        """
+        Checking if strategy should start sending signals.
+
+        Returns:
+        bool
+        """
+
+        return True
