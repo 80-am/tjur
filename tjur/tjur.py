@@ -24,9 +24,9 @@ binance = Binance(API_KEY, API_SECRET)
 class Tjur:
     with open(tjur_dir +'/assets/start-up.txt', 'r') as f:
         print(f.read())
+    ready = False
     print('Start time(UTC): ' + str(datetime.utcnow()))
     binance = Binance(API_KEY, API_SECRET)
-
     symbol = input("Select symbol to pair: ").upper()
     print("Available strategies:")
     print("[1] Moving Average Cross Over")
@@ -84,6 +84,9 @@ class Tjur:
         sys.exit()
 
     print('Trading ' + symbol)
+    while not ready:
+        if (strategy.is_ready()):
+            ready = True
 
     def calculate_signals(strategy, symbol, time_frame):
         """
