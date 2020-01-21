@@ -6,6 +6,7 @@ from exchanges.binance import Binance
 
 binance = Binance('apikey', 'apisecret')
 
+
 class Macd:
     """
     Moving Average Convergence/Divergence(MACD) strategy.
@@ -30,10 +31,12 @@ class Macd:
         bool
         """
 
-        raw_price = binance.get_historical_price(self.symbol, self.time_frame, 60)
+        raw_price = binance.get_historical_price(
+            self.symbol, self.time_frame, 60)
         prices = raw_price['Close']
         df = pd.DataFrame()
-        df['macd'], df['macdsignal'], df['macdhist'] = ta.MACD(prices, fastperiod=12, slowperiod=26, signalperiod=9)
+        df['macd'], df['macdsignal'], df['macdhist'] = ta.MACD(
+            prices, fastperiod=12, slowperiod=26, signalperiod=9)
 
         macd = float(df['macd'].tail(1))
         prev_macd = float(df['macd'].tail(2).iloc[-2])
@@ -51,10 +54,12 @@ class Macd:
         bool
         """
 
-        raw_price = binance.get_historical_price(self.symbol, self.time_frame, 60)
+        raw_price = binance.get_historical_price(
+            self.symbol, self.time_frame, 60)
         prices = raw_price['Close']
         df = pd.DataFrame()
-        df['macd'], df['macdsignal'], df['macdhist'] = ta.MACD(prices, fastperiod=12, slowperiod=26, signalperiod=9)
+        df['macd'], df['macdsignal'], df['macdhist'] = ta.MACD(
+            prices, fastperiod=12, slowperiod=26, signalperiod=9)
 
         macd = float(df['macd'].tail(1))
         macd_signal = float(df['macdsignal'].tail(1))

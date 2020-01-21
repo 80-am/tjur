@@ -8,6 +8,7 @@ from indicators.ma import MovingAverages
 
 binance = Binance('apikey', 'apisecret')
 
+
 class Maco:
     """
     Moving Average(MA) Cross-Over strategy.
@@ -28,7 +29,7 @@ class Maco:
         self.ma_type = ma_type.lower()
         self.symbol = symbol
         self.time_frame = time_frame
-        self.short_ticks= short_ticks
+        self.short_ticks = short_ticks
         self.long_ticks = long_ticks
 
     def calculate_buy_signal(self):
@@ -42,8 +43,10 @@ class Maco:
         bool
         """
 
-        short_ma_price = binance.get_historical_price(self.symbol, self.time_frame, self.short_ticks)
-        long_ma_price = binance.get_historical_price(self.symbol, self.time_frame, self.long_ticks)
+        short_ma_price = binance.get_historical_price(
+            self.symbol, self.time_frame, self.short_ticks)
+        long_ma_price = binance.get_historical_price(
+            self.symbol, self.time_frame, self.long_ticks)
         if (self.ma_type == 'sma'):
             short_ma = MovingAverages.get_sma(short_ma_price, self.short_ticks)
             long_ma = MovingAverages.get_sma(long_ma_price, self.long_ticks)
@@ -67,8 +70,10 @@ class Maco:
         bool
         """
 
-        short_ma_price = binance.get_historical_price(self.symbol, self.time_frame, self.short_ticks)
-        long_ma_price = binance.get_historical_price(self.symbol, self.time_frame, self.long_ticks)
+        short_ma_price = binance.get_historical_price(
+            self.symbol, self.time_frame, self.short_ticks)
+        long_ma_price = binance.get_historical_price(
+            self.symbol, self.time_frame, self.long_ticks)
         if (self.ma_type == 'sma'):
             short_ma = MovingAverages.get_sma(short_ma_price, self.short_ticks)
             long_ma = MovingAverages.get_sma(long_ma_price, self.long_ticks)

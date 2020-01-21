@@ -9,11 +9,13 @@ from urllib.parse import urlencode
 from requests.exceptions import Timeout
 
 # Interface to Binance public Rest API
+
+
 class Binance:
 
-    BASE_URL = "https://www.binance.com/api/v1"
-    BASE_V3_URL = "https://www.api.binance.com/api/v3"
-    PUBLIC_URL = "https://www.binance.com/exchange/public/product"
+    BASE_URL = 'https://www.binance.com/api/v1'
+    BASE_V3_URL = 'https://www.api.binance.com/api/v3'
+    PUBLIC_URL = 'https://www.binance.com/exchange/public/product'
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     pd.set_option('display.max_colwidth', -1)
 
@@ -23,13 +25,13 @@ class Binance:
 
     # Test connectivity to the Rest API and return server time
     def check_connection(self):
-        path = "%s/time" % self.BASE_URL
+        path = '%s/time' % self.BASE_URL
         params = {}
         return self._get(path, params)
 
     # Current exchange trading rules and symbol info
     def exchange_info(self):
-        path = "%s/exchangeInfo" % self.BASE_URL
+        path = '%s/exchangeInfo' % self.BASE_URL
         params = {}
         return self._get(path, params)
 
@@ -44,20 +46,20 @@ class Binance:
         list: id, price, quantity, quoteQuantity, time, isBuyerMaker, isBestMatch
 
         """
-        path = "%s/trades" % self.BASE_URL
-        params = {"symbol": symbol, "limit": limit}
+        path = '%s/trades' % self.BASE_URL
+        params = {'symbol': symbol, 'limit': limit}
         return self._get(path, params)
 
     # Current average price for a symbol
     def cur_avg_price(self, symbol):
-        path = "%s/avgPrice" % self.BASE_V3_URL
-        params = {"symbol": symbol}
+        path = '%s/avgPrice' % self.BASE_V3_URL
+        params = {'symbol': symbol}
         return self._get(path, params)
 
     # Latest price for a symbol or symbols
     def get_latest_price(self, symbol):
-        path = "%s/ticker/price" % self.BASE_V3_URL
-        params = {"symbol": symbol}
+        path = '%s/ticker/price' % self.BASE_V3_URL
+        params = {'symbol': symbol}
         return self._get(path, params)
 
     # Kline/candlestick bars for a symbol, klines are uniquely identified by their open time
@@ -77,10 +79,10 @@ class Binance:
         if not limit or limit > 1000:
             limit = 500
 
-        path = "%s/klines" % self.BASE_URL
-        params = {"symbol": symbol,
-                  "interval": candle_interval,
-                  "limit": limit}
+        path = '%s/klines' % self.BASE_URL
+        params = {'symbol': symbol,
+                  'interval': candle_interval,
+                  'limit': limit}
         raw_historical = self._get(path, params)
         df = pd.read_json(json.dumps(raw_historical))
         df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close time',
@@ -88,8 +90,10 @@ class Binance:
                       'Taker buy quote asset volume', 'Ignore']
         df.drop(df.columns[[7, 8, 9, 10, 11]], axis=1, inplace=True)
 
-        df['Open time'] = df['Open time'].apply(lambda x: datetime.datetime.fromtimestamp(x / 1e3))
-        df['Close time'] = df['Close time'].apply(lambda x: datetime.datetime.fromtimestamp(x / 1e3))
+        df['Open time'] = df['Open time'].apply(
+            lambda x: datetime.datetime.fromtimestamp(x / 1e3))
+        df['Close time'] = df['Close time'].apply(
+            lambda x: datetime.datetime.fromtimestamp(x / 1e3))
 
         return df
 
@@ -105,7 +109,8 @@ class Binance:
         pandas.DataFrame: Price
         """
 
-        historical_price = self.get_historical_data(symbol, candle_interval, limit)
+        historical_price = self.get_historical_data(
+            symbol, candle_interval, limit)
 
         historical_price = historical_price[['Close']]
 
@@ -124,12 +129,12 @@ class Binance:
 
         side = side.upper()
         order_type = order_type.upper()
-        path = "%s/order" % self.BASE_V3_URL
-        params = {"symbol": symbol,
-                  "side": side,
-                  "type": order_type,
-                  "quantity": quantity,
-                  "timestamp": timestamp}
+        path = '%s/order' % self.BASE_V3_URL
+        params = {'symbol': symbol,
+                  'side': side,
+                  'type': order_type,
+                  'quantity': quantity,
+                  'timestamp': timestamp}
 
         return self._post(path, params)
 
@@ -146,26 +151,27 @@ class Binance:
 
         side = side.upper()
         order_type = order_type.upper()
-        path = "%s/order/test" % self.BASE_V3_URL
-        params = {"symbol": symbol,
-                  "side": side,
-                  "type": order_type,
-                  "quantity": quantity,
-                  "timestamp": timestamp}
+        path = '%s/order/test' % self.BASE_V3_URL
+        params = {'symbol': symbol,
+                  'side': side,
+                  'type': order_type,
+                  'quantity': quantity,
+                  'timestamp': timestamp}
 
         return self._post(path, params)
 
     def _get(self, path, params):
         try:
-            url = "%s?%s" % (path, urlencode(params))
+            url = '%s?%s' % (path, urlencode(params))
             init_request = requests.get(url, timeout=30, verify=False)
             request = init_request.json()
             init_request.close()
             return request
-        except: Timeout
+        except:
+            Timeout
         print('Exception', url)
         pass
 
     def _post(self, path, params):
-        url = "%s?%s" % (path, urlencode(params))
+        url = '%s?%s' % (path, urlencode(params))
         return requests.post(url)
