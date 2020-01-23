@@ -1,9 +1,11 @@
 import datetime
+import hashlib
+import hmac
 import json
+import logging
 import pandas as pd
 import requests
 import time
-import urllib3
 
 from urllib.parse import urlencode
 from requests.exceptions import Timeout
@@ -14,9 +16,8 @@ from requests.exceptions import Timeout
 class Binance:
 
     BASE_URL = 'https://www.binance.com/api/v1'
-    BASE_V3_URL = 'https://www.api.binance.com/api/v3'
+    BASE_V3_URL = 'https://api.binance.com/api/v3'
     PUBLIC_URL = 'https://www.binance.com/exchange/public/product'
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     pd.set_option('display.max_colwidth', -1)
 
     def __init__(self, key, secret):
@@ -116,49 +117,72 @@ class Binance:
 
         return historical_price
 
+    # Get current account information
+    def get_account_information(self):
+        path = '%s/account' % self.BASE_V3_URL
+        params = {}
+        r = self.sign_payload('GET', path, params)
+
     # Creates and validates a new order
-    def create_new_order(self, symbol, side, order_type, quantity, timestamp):
+    def create_new_order(self, symbol, side, order_type, quantity, price):
         """
         Args:
         symbol (str): Symbol pair to operate on i.e LINKETH
         side (str): Order side i.e buy or sell
         order_type (str): Order type, only supports MARKET for now
         quantity (float): Position sizing, quantity to trade
-        timestamp (long): Current time when order is created
+        price (str): Price of position
         """
 
         side = side.upper()
         order_type = order_type.upper()
-        path = '%s/order' % self.BASE_V3_URL
+        path = '%s/order?' % self.BASE_V3_URL
         params = {'symbol': symbol,
                   'side': side,
                   'type': order_type,
                   'quantity': quantity,
-                  'timestamp': timestamp}
+                  'price': price,
+                  'timeInForce': 'GTC',
+                  'recvWindow': 4000}
 
-        return self._post(path, params)
+        r = self.sign_payload('POST', path, params)
 
     # Creates and validates a new order but does not send it into the matching engine
-    def create_new_order_test(self, symbol, side, order_type, quantity, timestamp):
+    def create_new_order_test(self, symbol, side, order_type, quantity, price):
         """
         Args:
         symbol (str): Symbol pair to operate on i.e LINKETH
         side (str): Order side i.e buy or sell
         order_type (str): Order type, only supports MARKET for now
         quantity (float): Position sizing, quantity to trade
-        timestamp (long): Current time when order is created
         """
 
-        side = side.upper()
-        order_type = order_type.upper()
-        path = '%s/order/test' % self.BASE_V3_URL
-        params = {'symbol': symbol,
-                  'side': side,
-                  'type': order_type,
-                  'quantity': quantity,
-                  'timestamp': timestamp}
+        path = '%s/order/test?' % self.BASE_V3_URL
+        params = {
+            'symbol': symbol,
+            'side': side,
+            'type': order_type,
+            'quantity': quantity,
+            'price': price,
+            'timeInForce': 'GTC',
+            'recvWindow': 4000}
 
-        return self._post(path, params)
+        r = self.sign_payload('POST', path, params)
+
+    def sign_payload(self, method, path, params):
+        query = urlencode(sorted(params.items()))
+        query += '&timestamp={}'.format(int(time.time() * 1000))
+        signature = hmac.new(self.secret.encode('utf-8'), query.encode('utf-8'),
+                             hashlib.sha256).hexdigest()
+        query += '&signature={}'.format(signature)
+
+        resp = requests.request(method, path + query,
+                                headers={"X-MBX-APIKEY": self.key})
+        data = resp.json()
+        logging.info(data)
+        if 'msg' in data:
+            logging.error(data['msg'])
+        return data
 
     def _get(self, path, params):
         try:

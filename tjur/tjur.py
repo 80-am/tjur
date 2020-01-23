@@ -32,7 +32,6 @@ class Tjur:
     with open(tjur_dir + '/assets/start-up.txt', 'r') as f:
         print(f.read())
     ready = False
-    binance = Binance(API_KEY, API_SECRET)
     symbol = input('Select symbol to pair: ').upper()
     check_symbol = str(binance.cur_avg_price(symbol))
     if ('Invalid symbol' in check_symbol):
@@ -138,4 +137,4 @@ class Tjur:
     except KeyboardInterrupt:
         print('Exiting')
         logging.warning('Exiting')
-        sys.exit()
+        sys.exit(0)
