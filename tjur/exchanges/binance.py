@@ -119,9 +119,22 @@ class Binance:
 
     # Get current account information
     def get_account_information(self):
-        path = '%s/account' % self.BASE_V3_URL
+        path = '%s/account?' % self.BASE_V3_URL
         params = {}
         r = self.sign_payload('GET', path, params)
+        return r
+
+    # Get balance for selected symbol
+    def get_symbol_balance(self, symbol):
+        """
+        symbol (str): Symbols balance to fetch
+        """
+
+        resp = self.get_account_information()
+        for assets in resp['balances']:
+            if assets['asset'] == symbol:
+                print('Balance for', symbol, ':',assets['free'])
+                logging.info('Balance for ' + symbol + ' : ' + assets['free'])
 
     # Creates and validates a new order
     def create_new_order(self, symbol, side, order_type, quantity, price):
