@@ -6,6 +6,7 @@ import logging
 import pandas as pd
 import requests
 import time
+import urllib3
 
 from urllib.parse import urlencode
 from requests.exceptions import Timeout
@@ -19,6 +20,7 @@ class Binance:
     BASE_V3_URL = 'https://api.binance.com/api/v3'
     PUBLIC_URL = 'https://www.binance.com/exchange/public/product'
     pd.set_option('display.max_colwidth', -1)
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     def __init__(self, key, secret):
         self.key = key
@@ -124,17 +126,22 @@ class Binance:
         r = self.sign_payload('GET', path, params)
         return r
 
-    # Get balance for selected symbol
-    def get_symbol_balance(self, symbol):
+    # Get balance for selected symbol and returns True if existing balance
+    def get_symbol_balance(self, account, symbol):
         """
         symbol (str): Symbols balance to fetch
+
+        Returns:
+        bool
         """
 
-        resp = self.get_account_information()
-        for assets in resp['balances']:
+        for assets in account['balances']:
             if assets['asset'] == symbol:
-                print('Balance for', symbol, ':',assets['free'])
+                print('Balance for', symbol, ':', assets['free'])
                 logging.info('Balance for ' + symbol + ' : ' + assets['free'])
+
+                if (float(assets['free']) > 0):
+                    return True
 
     # Creates and validates a new order
     def create_new_order(self, symbol, side, order_type, quantity, price):

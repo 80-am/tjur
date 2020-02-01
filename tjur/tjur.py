@@ -32,12 +32,24 @@ class Tjur:
     with open(tjur_dir + '/assets/start-up.txt', 'r') as f:
         print(f.read())
     ready = False
-    symbol = input('Select symbol to pair: ').upper()
+    account = binance.get_account_information()
+    symbol1 = input('Select first symbol to pair: ').upper()
+    balance_symbol1 = binance.get_symbol_balance(account, symbol1)
+    if (balance_symbol1):
+        symbol2 = input('Select second symbol to pair: ').upper()
+        balance_symbol2 = binance.get_symbol_balance(account, symbol2)
+        if not (balance_symbol2):
+            print('No holdings in account for', symbol2, '\nExiting')
+            sys.exit(0)
+    else:
+        print('No holdings in account for', symbol1, '\nExiting')
+        sys.exit(0)
+
+    symbol = symbol1 + symbol2
     check_symbol = str(binance.cur_avg_price(symbol))
     if ('Invalid symbol' in check_symbol):
-        print('Invalid symbol')
-        print('Exiting')
-        sys.exit()
+        print(symbol, 'is not a valid symbol', '\nExiting')
+        sys.exit(0)
 
     print('Available strategies:')
     print('[1] Moving Average Cross Over')
@@ -74,22 +86,19 @@ class Tjur:
 
     if (short_term <= 0 or long_term <= 0):
         print(short_term)
-        print('Invalid period')
-        print('Exiting')
-        sys.exit()
+        print('Invalid period', '\nExiting')
+        sys.exit(0)
     if not (time_frame in {'1m', '3m', '5m', '15m', '30m', '45m',
                            '1h', '2h', '3h', '4h', '1d', '1w', '1mo'}):
-        print('Invalid time frame')
-        print('Exiting')
-        sys.exit()
+        print('Invalid time frame', '\nExiting')
+        sys.exit(0)
     if (strategy == 1):
         strategy = Maco(average, symbol, time_frame, short_term, long_term)
     elif (strategy == 2):
         strategy = Macd(symbol, time_frame)
     else:
-        print('Invalid strategy')
-        print('Exiting')
-        sys.exit()
+        print('Invalid strategy', '\nExiting')
+        sys.exit(0)
 
     print('Start time(UTC):', datetime.utcnow())
     print('Trading', symbol)
