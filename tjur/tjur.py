@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 import time
@@ -38,9 +39,6 @@ class Tjur:
     if (balance_symbol1):
         symbol2 = input('Select second symbol to pair: ').upper()
         balance_symbol2 = binance.get_symbol_balance(account, symbol2)
-        if not (balance_symbol2):
-            print('No holdings in account for', symbol2, '\nExiting')
-            sys.exit(0)
     else:
         print('No holdings in account for', symbol1, '\nExiting')
         sys.exit(0)
@@ -51,8 +49,8 @@ class Tjur:
         print(symbol, 'is not a valid symbol', '\nExiting')
         sys.exit(0)
 
-    print('Available strategies:')
-    print('[1] Moving Average Cross Over')
+    print('\nAvailable strategies:')
+    print('[1] Moving Average Cross Over (Default)')
     print('[2] Moving Average Convergence/Divergence (MACD)')
     strategy = int(input('Select strategy: ') or 1)
 
@@ -62,7 +60,7 @@ class Tjur:
         custom = 'n'
 
     if (custom == 'y'):
-        print('Available moving averages:')
+        print('\nAvailable moving averages:')
         print('[1] Simple Moving Average (SMA)')
         print('[2] Exponential Moving Average (EMA)')
         average = int(input('Select average: '))
@@ -76,7 +74,7 @@ class Tjur:
         time_frame = input('Enter time frame: ').lower()
         short_term = int(input('Select short-term period: '))
         long_term = int(input('Select long-term period: '))
-        win_target = float(input('Profit target per trade (%): '))
+        win_target = 1 + float(input('Profit target per trade (%): ')) / 100
     else:
         average = 'sma'
         time_frame = '1h'
@@ -100,6 +98,46 @@ class Tjur:
         print('Invalid strategy', '\nExiting')
         sys.exit(0)
 
+    min_qty = binance.get_symbol_min_quantity(symbol)
+    max_qty = binance.get_symbol_max_quantity(symbol)
+    steps = binance.get_symbol_stepsize(symbol)
+    print('\nSizing rules for', symbol)
+    print('Min qty:', min_qty, '\nMax qty:', max_qty, '\nStep size:', steps)
+    print('\nAvailable amount types:')
+    print('[1] Fixed amount (Default)')
+    print('[2] Percentage of symbols balance (Will round to nearest allowed step)')
+    amount_type = int(input('Select amount type: ') or 1)
+    if (amount_type == 1):
+        position_size = float(input('Select position sizing: '))
+    else:
+        position_size = float(input('Select position sizing (%): ')) / 100
+
+    while (position_size > 0.05 and amount_type == 2):
+        print('Using a position sizing above 5% is not recommended.')
+        confirm = input('Continue anyway? [y/N] ').upper()
+        if not (confirm == 'Y'):
+            if (amount_type == 1):
+                position_size = float(input('Select position sizing: '))
+            else:
+                position_size = float(
+                    input('Select position sizing (%):')) / 100
+        else:
+            break
+
+    if (amount_type == 2):
+        stepper = 10.0 ** int(abs(math.log10(float(steps))))
+        position_size = position_size * balance_symbol2
+        position_size = math.trunc(stepper * position_size) / stepper
+
+    print('\nAvailable order types:')
+    print('[1] Market (Default)')
+    print('[2] Limit')
+    order_type = input('Select order type: ').upper()
+    if (order_type == '2' or order_type == 'LIMIT'):
+        order_type = 'LIMIT'
+    else:
+        order_type = 'MARKET'
+
     print('Start time(UTC):', datetime.utcnow())
     print('Trading', symbol)
     logging.info('Starting trading ' + symbol)
@@ -108,30 +146,43 @@ class Tjur:
             ready = True
             logging.info('Strategy ready')
 
-    def calculate_signals(strategy, symbol, time_frame, win_target):
+    def calculate_signals(strategy, symbol, symbol1, symbol2, order_type, position_size, time_frame, win_target):
         """
         Calculates when to send signal to buy or sell.
         """
 
         signal = 0
-        if (strategy.calculate_buy_signal() and signal == 0):
-            buy_order = float(binance.get_latest_price(symbol)['price'])
-            take_profit = buy_order * win_target
+        if (strategy.calculate_buy_signal() and signal == 0 and not binance.get_open_orders(symbol)):
+            if (order_type == 'LIMIT'):
+                price = binance.get_latest_price(symbol)['price']
+            else:
+                price = None
+
+            buy_order = binance.create_new_order(
+                symbol, 'BUY', order_type, position_size, price)
+            take_profit = float(buy_order['price']) * win_target
             signal = 1
-            print(datetime.utcnow(), 'Buying at:', str(buy_order))
-            logging.info('Buying at: ' + str(buy_order))
+            print(datetime.utcnow(), 'Buying', position_size,
+                  symbol1, 'for', buy_order['price'], symbol2)
+            logging.info('OrderId:', buy_order['orderId'], 'Buying',
+                         position_size, symbol1, 'for', buy_order['price'], symbol2)
 
             while (signal == 1):
                 latest_price = float(binance.get_latest_price(symbol)['price'])
-                stop_loss = buy_order * 0.84
+                stop_loss = float(buy_order['price']) * 0.92
                 sell_signal = strategy.calculate_sell_signal()
 
-                if ((sell_signal and stop_loss > latest_price)
+                if ((stop_loss > latest_price) or (sell_signal and latest_price > float(buy_order['price']))
                         or (sell_signal and latest_price > take_profit)):
-                    sell_order = latest_price
-                    print(datetime.utcnow(), 'Sold at:', str(sell_order))
-                    logging.info('Sold at: ' + str(sell_order))
-                    pl = Performance.calculate_pl(buy_order, sell_order)
+                    sell_order = create_new_order(
+                        symbol, 'SELL', order_type, position_size, price)
+                    print(datetime.utcnow(), 'Selling', position_size,
+                          symbol1, 'for', sell_order['price'], symbol2)
+                    logging.info('OrderId:', sell_order['orderId'], 'Selling',
+                                 position_size, symbol1, 'for', sell_order['price'], symbol2)
+
+                    pl = Performance.calculate_pl(
+                        buy_order['price'], sell_order['price'])
                     print(
                         datetime.utcnow(), 'Margin:', str(
                             round(
@@ -141,7 +192,8 @@ class Tjur:
 
     try:
         while True:
-            calculate_signals(strategy, symbol, time_frame, win_target)
+            calculate_signals(strategy, symbol, symbol1, symbol2,
+                              order_type, position_size, time_frame, win_target)
 
     except KeyboardInterrupt:
         print('Exiting')

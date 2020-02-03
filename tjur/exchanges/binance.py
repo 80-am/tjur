@@ -5,6 +5,7 @@ import json
 import logging
 import pandas as pd
 import requests
+import sys
 import time
 import urllib3
 
@@ -34,7 +35,7 @@ class Binance:
 
     # Current exchange trading rules and symbol info
     def exchange_info(self):
-        path = '%s/exchangeInfo' % self.BASE_URL
+        path = '%s/exchangeInfo' % self.BASE_V3_URL
         params = {}
         return self._get(path, params)
 
@@ -57,7 +58,8 @@ class Binance:
     def cur_avg_price(self, symbol):
         path = '%s/avgPrice' % self.BASE_V3_URL
         params = {'symbol': symbol}
-        return self._get(path, params)
+        r = self._get(path, params)
+        return float(r['price'])
 
     # Latest price for a symbol or symbols
     def get_latest_price(self, symbol):
@@ -126,22 +128,82 @@ class Binance:
         r = self.sign_payload('GET', path, params)
         return r
 
-    # Get balance for selected symbol and returns True if existing balance
+    # Get balance for selected symbol
     def get_symbol_balance(self, account, symbol):
         """
+        Args:
         symbol (str): Symbols balance to fetch
 
         Returns:
-        bool
+        float
         """
 
         for assets in account['balances']:
             if assets['asset'] == symbol:
                 print('Balance for', symbol, ':', assets['free'])
                 logging.info('Balance for ' + symbol + ' : ' + assets['free'])
+                return (float(assets['free']))
 
-                if (float(assets['free']) > 0):
-                    return True
+    def get_symbol_min_quantity(self, symbols):
+        """
+        Args:
+        symbols (str): Symbol pair to check min quantity per trade allowed
+
+        Returns:
+        string
+        """
+
+        exchange_info = self.exchange_info()
+        for pairing in exchange_info['symbols']:
+            if (pairing['symbol'] == symbols):
+                for filter in pairing['filters']:
+                    if (filter['filterType'] == 'LOT_SIZE'):
+                        return filter['minQty']
+
+    def get_symbol_max_quantity(self, symbols):
+        """
+        Args:
+        symbols (str): Symbol pair to check max quantity per trade allowed
+
+        Returns:
+        string
+        """
+
+        exchange_info = self.exchange_info()
+        for pairing in exchange_info['symbols']:
+            if (pairing['symbol'] == symbols):
+                for filter in pairing['filters']:
+                    if (filter['filterType'] == 'LOT_SIZE'):
+                        return filter['maxQty']
+
+    def get_symbol_stepsize(self, symbols):
+        """
+        Args:
+        symbols (str): Symbol pair to check stepsize
+
+        Returns:
+        string
+        """
+
+        exchange_info = self.exchange_info()
+        for pairing in exchange_info['symbols']:
+            if (pairing['symbol'] == symbols):
+                for filter in pairing['filters']:
+                    if (filter['filterType'] == 'LOT_SIZE'):
+                        return filter['stepSize']
+
+    def get_open_orders(self, symbol):
+        """
+        Args:
+        symbol (str): Symbol to get orders for
+
+        Returns:
+        list
+        """
+
+        path = '%s/openOrders?' % self.BASE_V3_URL
+        params = {'symbol': symbol}
+        return self.sign_payload('GET', path, params)
 
     # Creates and validates a new order
     def create_new_order(self, symbol, side, order_type, quantity, price):
@@ -149,23 +211,24 @@ class Binance:
         Args:
         symbol (str): Symbol pair to operate on i.e LINKETH
         side (str): Order side i.e buy or sell
-        order_type (str): Order type, only supports MARKET for now
+        order_type (str): Order type i.e MARKET
         quantity (float): Position sizing, quantity to trade
         price (str): Price of position
         """
 
         side = side.upper()
-        order_type = order_type.upper()
         path = '%s/order?' % self.BASE_V3_URL
         params = {'symbol': symbol,
                   'side': side,
                   'type': order_type,
                   'quantity': quantity,
-                  'price': price,
-                  'timeInForce': 'GTC',
                   'recvWindow': 4000}
+        if (order_type == 'LIMIT'):
+            params = params.copy()
+            params.update({'price': price,
+                           'timeInForce': 'GTC'})
 
-        r = self.sign_payload('POST', path, params)
+        return self.sign_payload('POST', path, params)
 
     # Creates and validates a new order but does not send it into the matching engine
     def create_new_order_test(self, symbol, side, order_type, quantity, price):
@@ -173,7 +236,7 @@ class Binance:
         Args:
         symbol (str): Symbol pair to operate on i.e LINKETH
         side (str): Order side i.e buy or sell
-        order_type (str): Order type, only supports MARKET for now
+        order_type (str): Order type i.e MARKET
         quantity (float): Position sizing, quantity to trade
         """
 
@@ -201,7 +264,11 @@ class Binance:
         data = resp.json()
         logging.info(data)
         if 'msg' in data:
+            print(data['msg'])
             logging.error(data['msg'])
+            if ('Filter failure' in data['msg']):
+                print('Exiting')
+                sys.exit(0)
         return data
 
     def _get(self, path, params):
