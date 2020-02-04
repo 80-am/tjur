@@ -174,7 +174,7 @@ class Tjur:
 
                 if ((stop_loss > latest_price) or (sell_signal and latest_price > float(buy_order['price']))
                         or (sell_signal and latest_price > take_profit)):
-                    sell_order = create_new_order(
+                    sell_order = binance.create_new_order(
                         symbol, 'SELL', order_type, position_size, price)
                     print(datetime.utcnow(), 'Selling', position_size,
                           symbol1, 'for', sell_order['price'], symbol2)
