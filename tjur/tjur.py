@@ -182,7 +182,7 @@ class Tjur:
                                  position_size, symbol1, 'for', sell_order['price'], symbol2)
 
                     pl = Performance.calculate_pl(
-                        buy_order['price'], sell_order['price'])
+                        float(buy_order['price']), float(sell_order['price']))
                     print(
                         datetime.utcnow(), 'Margin:', str(
                             round(
