@@ -138,7 +138,7 @@ class Tjur:
     else:
         order_type = 'MARKET'
 
-    print('Start time(UTC):', datetime.utcnow())
+    print('\nStart time(UTC):', datetime.utcnow())
     print('Trading', symbol)
     logging.info('Starting trading ' + symbol)
     while not ready:
@@ -160,29 +160,30 @@ class Tjur:
 
             buy_order = binance.create_new_order(
                 symbol, 'BUY', order_type, position_size, price)
-            take_profit = float(buy_order['price']) * win_target
+            buy_price = float(buy_order['fills'][0]['price'])
+            take_profit = buy_price * win_target
             signal = 1
-            print(datetime.utcnow(), 'Buying', position_size,
-                  symbol1, 'for', buy_order['price'], symbol2)
-            logging.info('OrderId:', buy_order['orderId'], 'Buying',
-                         position_size, symbol1, 'for', buy_order['price'], symbol2)
+            print('\n', datetime.utcnow(), 'Buying', position_size,
+                  symbol1, 'for', '{:.10f}'.format(buy_price), symbol2)
+            logging.info('OrderId: ' + buy_order['orderId'] + ' Buying ' +
+                         str(position_size) + symbol1 + ' for' + '{:.10f}'.format(buy_price) + symbol2)
 
             while (signal == 1):
                 latest_price = float(binance.get_latest_price(symbol)['price'])
-                stop_loss = float(buy_order['price']) * 0.92
+                stop_loss = float(buy_price * 0.92)
                 sell_signal = strategy.calculate_sell_signal()
 
-                if ((stop_loss > latest_price) or (sell_signal and latest_price > float(buy_order['price']))
+                if ((stop_loss > latest_price) or (sell_signal and latest_price > buy_price)
                         or (sell_signal and latest_price > take_profit)):
                     sell_order = binance.create_new_order(
                         symbol, 'SELL', order_type, position_size, price)
-                    print(datetime.utcnow(), 'Selling', position_size,
-                          symbol1, 'for', sell_order['price'], symbol2)
-                    logging.info('OrderId:', sell_order['orderId'], 'Selling',
-                                 position_size, symbol1, 'for', sell_order['price'], symbol2)
+                    sell_price = float(sell_order['fills'][0]['price'])
+                    print('\n', datetime.utcnow(), 'Selling', position_size,
+                          symbol1, 'for', '{:.10f}'.format(sell_price), symbol2)
+                    logging.info('OrderId: ' + sell_order['orderId'] + ' Selling ' +
+                                 str(position_size) + symbol1 + ' for ' + '{:.10f}'.format(sell_price) + symbol2)
 
-                    pl = Performance.calculate_pl(
-                        float(buy_order['price']), float(sell_order['price']))
+                    pl = Performance.calculate_pl(buy_price, sell_price)
                     print(
                         datetime.utcnow(), 'Margin:', str(
                             round(
