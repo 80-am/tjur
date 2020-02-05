@@ -164,8 +164,8 @@ class Tjur:
             take_profit = buy_price * win_target
             signal = 1
             print('\n', datetime.utcnow(), 'Buying', position_size,
-                  symbol1, 'for', '{:.10f}'.format(buy_price), symbol2)
-            logging.info('OrderId: ' + buy_order['orderId'] + ' Buying ' +
+                  symbol1, 'for', '{:.8f}'.format(buy_price), symbol2)
+            logging.info('OrderId: ' + str(buy_order['orderId']) + ' Buying ' +
                          str(position_size) + symbol1 + ' for' + '{:.10f}'.format(buy_price) + symbol2)
 
             while (signal == 1):
@@ -179,8 +179,8 @@ class Tjur:
                         symbol, 'SELL', order_type, position_size, price)
                     sell_price = float(sell_order['fills'][0]['price'])
                     print('\n', datetime.utcnow(), 'Selling', position_size,
-                          symbol1, 'for', '{:.10f}'.format(sell_price), symbol2)
-                    logging.info('OrderId: ' + sell_order['orderId'] + ' Selling ' +
+                          symbol1, 'for', '{:.8f}'.format(sell_price), symbol2)
+                    logging.info('OrderId: ' + str(sell_order['orderId']) + ' Selling ' +
                                  str(position_size) + symbol1 + ' for ' + '{:.10f}'.format(sell_price) + symbol2)
 
                     pl = Performance.calculate_pl(buy_price, sell_price)
