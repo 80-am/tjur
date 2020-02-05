@@ -1,8 +1,3 @@
-import os
-
-import numpy as np
-import pandas as pd
-
 from exchanges.binance import Binance
 from indicators.ma import MovingAverages
 

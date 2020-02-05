@@ -9,8 +9,9 @@ import sys
 import time
 import urllib3
 
-from urllib.parse import urlencode
+from decimal import Decimal
 from requests.exceptions import Timeout
+from urllib.parse import urlencode
 
 # Interface to Binance public Rest API
 
@@ -55,11 +56,11 @@ class Binance:
         return self._get(path, params)
 
     # Current average price for a symbol
-    def cur_avg_price(self, symbol):
+    def get_cur_avg_price(self, symbol):
         path = '%s/avgPrice' % self.BASE_V3_URL
         params = {'symbol': symbol}
         r = self._get(path, params)
-        return float(r['price'])
+        return Decimal(r['price'])
 
     # Latest price for a symbol or symbols
     def get_latest_price(self, symbol):
@@ -135,14 +136,14 @@ class Binance:
         symbol (str): Symbols balance to fetch
 
         Returns:
-        float
+        Decimal
         """
 
         for assets in account['balances']:
             if assets['asset'] == symbol:
                 print('Balance for', symbol, ':', assets['free'])
                 logging.info('Balance for ' + symbol + ' : ' + assets['free'])
-                return (float(assets['free']))
+                return Decimal(assets['free'])
 
     def get_symbol_min_quantity(self, symbols):
         """
@@ -150,7 +151,7 @@ class Binance:
         symbols (str): Symbol pair to check min quantity per trade allowed
 
         Returns:
-        string
+        Decimal
         """
 
         exchange_info = self.exchange_info()
@@ -158,7 +159,7 @@ class Binance:
             if (pairing['symbol'] == symbols):
                 for filter in pairing['filters']:
                     if (filter['filterType'] == 'LOT_SIZE'):
-                        return filter['minQty']
+                        return Decimal(filter['minQty'])
 
     def get_symbol_max_quantity(self, symbols):
         """
@@ -166,7 +167,7 @@ class Binance:
         symbols (str): Symbol pair to check max quantity per trade allowed
 
         Returns:
-        string
+        Decimal
         """
 
         exchange_info = self.exchange_info()
@@ -174,7 +175,7 @@ class Binance:
             if (pairing['symbol'] == symbols):
                 for filter in pairing['filters']:
                     if (filter['filterType'] == 'LOT_SIZE'):
-                        return filter['maxQty']
+                        return Decimal(filter['maxQty'])
 
     def get_symbol_stepsize(self, symbols):
         """
@@ -212,7 +213,7 @@ class Binance:
         symbol (str): Symbol pair to operate on i.e LINKETH
         side (str): Order side i.e buy or sell
         order_type (str): Order type i.e MARKET
-        quantity (float): Position sizing, quantity to trade
+        quantity (decimal): Position sizing, quantity to trade
         price (str): Price of position
         """
 
@@ -237,7 +238,7 @@ class Binance:
         symbol (str): Symbol pair to operate on i.e LINKETH
         side (str): Order side i.e buy or sell
         order_type (str): Order type i.e MARKET
-        quantity (float): Position sizing, quantity to trade
+        quantity (decimal): Position sizing, quantity to trade
         """
 
         path = '%s/order/test?' % self.BASE_V3_URL
@@ -277,11 +278,15 @@ class Binance:
             init_request = requests.get(url, timeout=30, verify=False)
             request = init_request.json()
             init_request.close()
+            if 'msg' in request:
+                print(request['msg'])
+                logging.error(request['msg'])
             return request
         except:
             Timeout
         print('Exception', url)
-        pass
+        print('Exiting')
+        sys.exit(0)
 
     def _post(self, path, params):
         url = '%s?%s' % (path, urlencode(params))

@@ -1,7 +1,7 @@
 import talib as ta
-import numpy as np
 import pandas as pd
 
+from decimal import Decimal
 from exchanges.binance import Binance
 
 binance = Binance('apikey', 'apisecret')
@@ -38,10 +38,10 @@ class Macd:
         df['macd'], df['macdsignal'], df['macdhist'] = ta.MACD(
             prices, fastperiod=12, slowperiod=26, signalperiod=9)
 
-        macd = float(df['macd'].tail(1))
-        prev_macd = float(df['macd'].tail(2).iloc[-2])
-        macd_signal = float(df['macdsignal'].tail(1))
-        prev_macd_signal = float(df['macdsignal'].tail(2).iloc[-2])
+        macd = Decimal(df['macd'].tail(1))
+        prev_macd = Decimal(df['macd'].tail(2).iloc[-2])
+        macd_signal = Decimal(df['macdsignal'].tail(1))
+        prev_macd_signal = Decimal(df['macdsignal'].tail(2).iloc[-2])
 
         if (macd > macd_signal and prev_macd < prev_macd_signal):
             return True
@@ -61,8 +61,8 @@ class Macd:
         df['macd'], df['macdsignal'], df['macdhist'] = ta.MACD(
             prices, fastperiod=12, slowperiod=26, signalperiod=9)
 
-        macd = float(df['macd'].tail(1))
-        macd_signal = float(df['macdsignal'].tail(1))
+        macd = Decimal(df['macd'].tail(1))
+        macd_signal = Decimal(df['macdsignal'].tail(1))
 
         if (macd < macd_signal):
             return True

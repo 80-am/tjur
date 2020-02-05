@@ -7,6 +7,7 @@ import config
 import logging
 
 from datetime import datetime
+from decimal import Decimal
 from analysis.performance import Performance
 from exchanges.binance import Binance
 from strategies.maco import Maco
@@ -44,7 +45,7 @@ class Tjur:
         sys.exit(0)
 
     symbol = symbol1 + symbol2
-    check_symbol = str(binance.cur_avg_price(symbol))
+    check_symbol = str(binance.get_cur_avg_price(symbol))
     if ('Invalid symbol' in check_symbol):
         print(symbol, 'is not a valid symbol', '\nExiting')
         sys.exit(0)
@@ -74,7 +75,7 @@ class Tjur:
         time_frame = input('Enter time frame: ').lower()
         short_term = int(input('Select short-term period: '))
         long_term = int(input('Select long-term period: '))
-        win_target = 1 + float(input('Profit target per trade (%): ')) / 100
+        win_target = 1 + Decimal(input('Profit target per trade (%): ')) / 100
     else:
         average = 'sma'
         time_frame = '1h'
@@ -105,29 +106,39 @@ class Tjur:
     print('Min qty:', min_qty, '\nMax qty:', max_qty, '\nStep size:', steps)
     print('\nAvailable amount types:')
     print('[1] Fixed amount (Default)')
-    print('[2] Percentage of symbols balance (Will round to nearest allowed step)')
+    print('[2] Percentage of', symbol2, 'balance')
     amount_type = int(input('Select amount type: ') or 1)
     if (amount_type == 1):
-        position_size = float(input('Select position sizing: '))
+        position_size = Decimal(input('Select position sizing: '))
     else:
-        position_size = float(input('Select position sizing (%): ')) / 100
+        position_size = Decimal(input('Select position sizing (%): ')) / 100
 
     while (position_size > 0.05 and amount_type == 2):
         print('Using a position sizing above 5% is not recommended.')
         confirm = input('Continue anyway? [y/N] ').upper()
         if not (confirm == 'Y'):
             if (amount_type == 1):
-                position_size = float(input('Select position sizing: '))
+                position_size = Decimal(input('Select position sizing: '))
             else:
-                position_size = float(
+                position_size = Decimal(
                     input('Select position sizing (%):')) / 100
         else:
             break
 
     if (amount_type == 2):
-        stepper = 10.0 ** int(abs(math.log10(float(steps))))
-        position_size = position_size * balance_symbol2
-        position_size = math.trunc(stepper * position_size) / stepper
+        cur_avg_price = binance.get_cur_avg_price(symbol)
+        position_size = (position_size * balance_symbol2) / cur_avg_price
+        steps = steps.find('1') - 1
+        print(steps)
+        step_precision = Decimal(10) ** -steps
+        if (Decimal(steps) > 1):
+            position_size = Decimal(position_size).quantize(step_precision)
+        else:
+            position_size = int(position_size)
+
+    if (position_size < min_qty):
+        print('Amount', str(position_size), 'too low\nExiting')
+        sys.exit(0)
 
     print('\nAvailable order types:')
     print('[1] Market (Default)')
@@ -160,25 +171,25 @@ class Tjur:
 
             buy_order = binance.create_new_order(
                 symbol, 'BUY', order_type, position_size, price)
-            buy_price = float(buy_order['fills'][0]['price'])
+            buy_price = Decimal(buy_order['fills'][0]['price'])
             take_profit = buy_price * win_target
             signal = 1
-            print('\n', datetime.utcnow(), 'Buying', position_size,
+            print(datetime.utcnow(), 'Buying', position_size,
                   symbol1, 'for', '{:.8f}'.format(buy_price), symbol2)
             logging.info('OrderId: ' + str(buy_order['orderId']) + ' Buying ' +
                          str(position_size) + symbol1 + ' for' + '{:.10f}'.format(buy_price) + symbol2)
 
             while (signal == 1):
-                latest_price = float(binance.get_latest_price(symbol)['price'])
-                stop_loss = float(buy_price * 0.92)
+                latest_price = Decimal(
+                    binance.get_latest_price(symbol)['price'])
+                stop_loss = Decimal(buy_price * 0.92)
                 sell_signal = strategy.calculate_sell_signal()
 
-                if ((stop_loss > latest_price) or (sell_signal and latest_price > buy_price)
-                        or (sell_signal and latest_price > take_profit)):
+                if ((stop_loss > latest_price) or (sell_signal and latest_price > take_profit)):
                     sell_order = binance.create_new_order(
                         symbol, 'SELL', order_type, position_size, price)
-                    sell_price = float(sell_order['fills'][0]['price'])
-                    print('\n', datetime.utcnow(), 'Selling', position_size,
+                    sell_price = Decimal(sell_order['fills'][0]['price'])
+                    print(datetime.utcnow(), 'Selling', position_size,
                           symbol1, 'for', '{:.8f}'.format(sell_price), symbol2)
                     logging.info('OrderId: ' + str(sell_order['orderId']) + ' Selling ' +
                                  str(position_size) + symbol1 + ' for ' + '{:.10f}'.format(sell_price) + symbol2)
@@ -188,7 +199,7 @@ class Tjur:
                         datetime.utcnow(), 'Margin:', str(
                             round(
                                 pl, 3)) + '%')
-                    logging.info('Margin:' + str(round(pl, 3)) + '%')
+                    logging.info('Margin:' + str(round(pl, 3)) + '%\n')
                     signal = 0
 
     try:
