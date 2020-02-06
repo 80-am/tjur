@@ -108,28 +108,58 @@ class Tjur:
     print('[1] Fixed amount (Default)')
     print('[2] Percentage of', symbol2, 'balance')
     amount_type = int(input('Select amount type: ') or 1)
+    cur_avg_price = binance.get_cur_avg_price(symbol)
     if (amount_type == 1):
         position_size = Decimal(input('Select position sizing: '))
+        position_percentage = Decimal(
+            (cur_avg_price * position_size) / balance_symbol2).quantize(Decimal(10) ** -2) * 100
+        if (position_percentage > Decimal(100.0) or position_percentage == Decimal(1.00)):
+            print('Insufficient funds\nExiting')
+            sys.exit(0)
+        if (position_percentage < 0.01):
+            print(str(position_size), symbol1, 'is less than 0.01% of',
+                  symbol2, 'balance at current price')
+        else:
+            print(str(position_size), symbol1, 'is about', str(
+                position_percentage) + '% of', symbol2, 'balance at current price')
     else:
-        position_size = Decimal(input('Select position sizing (%): ')) / 100
+        position_percentage = Decimal(
+            input('Select position sizing (%): ')) / 100
+        position_size = Decimal(
+            ((position_percentage * balance_symbol2) / cur_avg_price).quantize(Decimal(10) ** -8))
+        print(str(position_percentage * 100) + '% of', symbol2, 'is about',
+              position_size, symbol1, 'at current price')
 
-    while (position_size > 0.05 and amount_type == 2):
-        print('Using a position sizing above 5% is not recommended.')
+    while (position_percentage > 0.05):
+        print('Using a position sizing above 5% is not recommended')
         confirm = input('Continue anyway? [y/N] ').upper()
         if not (confirm == 'Y'):
             if (amount_type == 1):
                 position_size = Decimal(input('Select position sizing: '))
+                position_percentage = (
+                    cur_avg_price * position_size) / balance_symbol2
+                position_percentage = Decimal(
+                    position_percentage).quantize(Decimal(10) ** -2)
+                print(str(position_size), 'is about', str(
+                    position_percentage) + '% of', symbol2, 'balance at current price')
             else:
-                position_size = Decimal(
-                    input('Select position sizing (%):')) / 100
+                position_percentage = Decimal(
+                    input('Select position sizing (%): ')) / 100
+                if (position_percentage <= Decimal(1.0)):
+                    position_size = Decimal(
+                        ((position_percentage * balance_symbol2) / cur_avg_price).quantize(Decimal(10) ** -8))
+                    print(str(position_percentage * 100) + '% of', symbol2, 'is about',
+                          position_size, symbol1, 'at current price')
+                else:
+                    print('Insufficient funds\nExiting')
+                    sys.exit(0)
         else:
             break
 
     if (amount_type == 2):
         cur_avg_price = binance.get_cur_avg_price(symbol)
-        position_size = (position_size * balance_symbol2) / cur_avg_price
+        position_size = (position_percentage * balance_symbol2) / cur_avg_price
         steps = steps.find('1') - 1
-        print(steps)
         step_precision = Decimal(10) ** -steps
         if (Decimal(steps) > 1):
             position_size = Decimal(position_size).quantize(step_precision)
@@ -177,22 +207,28 @@ class Tjur:
             print(datetime.utcnow(), 'Buying', position_size,
                   symbol1, 'for', '{:.8f}'.format(buy_price), symbol2)
             logging.info('OrderId: ' + str(buy_order['orderId']) + ' Buying ' +
-                         str(position_size) + symbol1 + ' for' + '{:.10f}'.format(buy_price) + symbol2)
+                         str(position_size) + symbol1 + ' for' + '{:.8f}'.format(buy_price) + symbol2)
 
             while (signal == 1):
                 latest_price = Decimal(
                     binance.get_latest_price(symbol)['price'])
-                stop_loss = Decimal(buy_price * 0.92)
+                stop_percentage = Decimal(0.92)
+                stop_loss = buy_price * stop_percentage
                 sell_signal = strategy.calculate_sell_signal()
 
                 if ((stop_loss > latest_price) or (sell_signal and latest_price > take_profit)):
+                    if (amount_type == 2):
+                        position_sell = Decimal(
+                            position_percentage * balance_symbol1).quantize(Decimal(10) ** -8)
+                    else:
+                        position_sell = position_size
                     sell_order = binance.create_new_order(
-                        symbol, 'SELL', order_type, position_size, price)
+                        symbol, 'SELL', order_type, position_sell, price)
                     sell_price = Decimal(sell_order['fills'][0]['price'])
-                    print(datetime.utcnow(), 'Selling', position_size,
+                    print(datetime.utcnow(), 'Selling', position_sell,
                           symbol1, 'for', '{:.8f}'.format(sell_price), symbol2)
                     logging.info('OrderId: ' + str(sell_order['orderId']) + ' Selling ' +
-                                 str(position_size) + symbol1 + ' for ' + '{:.10f}'.format(sell_price) + symbol2)
+                                 str(position_sell) + symbol1 + ' for ' + '{:.8f}'.format(sell_price) + symbol2)
 
                     pl = Performance.calculate_pl(buy_price, sell_price)
                     print(
