@@ -285,8 +285,7 @@ class Binance:
         except:
             Timeout
         print('Exception', url)
-        print('Exiting')
-        sys.exit(0)
+        pass
 
     def _post(self, path, params):
         url = '%s?%s' % (path, urlencode(params))
