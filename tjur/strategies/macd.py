@@ -12,7 +12,8 @@ class Macd:
     Moving Average Convergence/Divergence(MACD) strategy.
 
     The MACD is calculated by subtracting a slow EMA from a fast EMA.
-    When the MACD crosses the signal line (often EMA(9)), it indicates a change of trend.
+    When the MACD crosses the signal line (often EMA(9)),
+    it indicates a change of trend.
 
     Args:
     symbol (str): Symbol pair to operate on i.e BTCUSDT
@@ -25,7 +26,8 @@ class Macd:
 
     def calculate_buy_signal(self):
         """
-        When the MACD crosses the signal line from below it indicates a bullish trend.
+        When the MACD crosses the signal line from below it
+        indicates a bullish trend.
 
         Returns:
         bool
@@ -48,7 +50,8 @@ class Macd:
 
     def calculate_sell_signal(self):
         """
-        When the MACD crosses the signal line from above it indicates a bearish trend.
+        When the MACD crosses the signal line from above it
+        indicates a bearish trend.
 
         Returns:
         bool

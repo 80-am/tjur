@@ -48,7 +48,8 @@ class Binance:
         limit (int): Number of trades to get
 
         Returns:
-        list: id, price, quantity, quoteQuantity, time, isBuyerMaker, isBestMatch
+        list: id, price, quantity, quoteQuantity, time, isBuyerMaker,
+              isBestMatch
 
         """
         path = '%s/trades' % self.BASE_URL
@@ -68,7 +69,7 @@ class Binance:
         params = {'symbol': symbol}
         return self._get(path, params)
 
-    # Kline/candlestick bars for a symbol, klines are uniquely identified by their open time
+    # Kline/candles for a symbol, klines are identified by their open time
     def get_historical_data(self, symbol, candle_interval, limit):
         """
         Args:
@@ -91,8 +92,9 @@ class Binance:
                   'limit': limit}
         raw_historical = self._get(path, params)
         df = pd.read_json(json.dumps(raw_historical))
-        df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close time',
-                      'Quote asset volume', 'Number of trades', 'Taker buy base asset volume',
+        df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume',
+                      'Close time', 'Quote asset volume', 'Number of trades',
+                      'Taker buy base asset volume',
                       'Taker buy quote asset volume', 'Ignore']
         df.drop(df.columns[[7, 8, 9, 10, 11]], axis=1, inplace=True)
 
@@ -109,7 +111,6 @@ class Binance:
         symbol (str): Symbol pair to operate on i.e BTCUSDT
         candle_interval (str): Trading time frame i.e 5m or 4h
         limit (int, optional): Number of ticks to return. Default 500; Max 1000
-        TODO: price_type (int): Type of price (OHLC) i.e 2 as in High or 4 as in Close
 
         Returns:
         pandas.DataFrame: Price
@@ -231,7 +232,7 @@ class Binance:
 
         return self.sign_payload('POST', path, params)
 
-    # Creates and validates a new order but does not send it into the matching engine
+    # Creates and validates a new order without sending it to market
     def create_new_order_test(self, symbol, side, order_type, quantity, price):
         """
         Args:
@@ -251,13 +252,13 @@ class Binance:
             'timeInForce': 'GTC',
             'recvWindow': 4000}
 
-        r = self.sign_payload('POST', path, params)
+        return self.sign_payload('POST', path, params)
 
     def sign_payload(self, method, path, params):
         query = urlencode(sorted(params.items()))
         query += '&timestamp={}'.format(int(time.time() * 1000))
-        signature = hmac.new(self.secret.encode('utf-8'), query.encode('utf-8'),
-                             hashlib.sha256).hexdigest()
+        signature = hmac.new(self.secret.encode('utf-8'),
+                             query.encode('utf-8'), hashlib.sha256).hexdigest()
         query += '&signature={}'.format(signature)
 
         resp = requests.request(method, path + query,
@@ -275,7 +276,7 @@ class Binance:
     def _get(self, path, params):
         try:
             url = '%s?%s' % (path, urlencode(params))
-            init_request = requests.get(url, timeout=30, verify=False)
+            init_request = requests.get(url, timeout=60, verify=False)
             request = init_request.json()
             init_request.close()
             if 'msg' in request:
@@ -284,8 +285,8 @@ class Binance:
             return request
         except:
             Timeout
-        print('Exception', url)
-        pass
+            print('Exception', url)
+            pass
 
     def _post(self, path, params):
         url = '%s?%s' % (path, urlencode(params))

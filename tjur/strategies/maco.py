@@ -20,12 +20,14 @@ class Maco:
     TODO: price_type (str): Type of price (OHLC) i.e High or Close
     """
 
-    def __init__(self, ma_type, symbol, time_frame, short_ticks, long_ticks):
+    def __init__(self, ma_type, symbol, time_frame, short_ticks, long_ticks,
+                 logger):
         self.ma_type = ma_type.lower()
         self.symbol = symbol
         self.time_frame = time_frame
         self.short_ticks = short_ticks
         self.long_ticks = long_ticks
+        self.logger = logger
 
     def calculate_buy_signal(self):
         """
@@ -52,6 +54,8 @@ class Maco:
             print('Please use a supported moving average')
 
         if (short_ma > long_ma):
+            self.logger.log('Golden crossing: Short MA (' + str(short_ma)
+                            + ') greater than long MA (' + str(long_ma) + ')')
             return True
 
     def calculate_sell_signal(self):
@@ -85,7 +89,7 @@ class Maco:
         """
         Checking if strategy should start sending signals.
 
-        If short-term MA is above long-term when initialized, dont start trading.
+        If short-term MA is above long-term, dont start trading.
 
         Returns:
         bool
