@@ -3,4 +3,3 @@ requests==2.22.0
 urllib3==1.25.7
 numpy==1.18.1
 TA_Lib==0.4.17
-talib==0.1.1
