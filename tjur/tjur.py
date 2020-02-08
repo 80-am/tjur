@@ -44,7 +44,8 @@ class Tjur:
 
             while (signal == 1):
                 latest_price = Decimal(
-                    binance.get_latest_price(self.symbol)['price'])
+                    binance.get_latest_price(self.symbol)['price']
+                    or buy_order['price'])
                 stop_loss = buy_order['price'] * Decimal(0.92)
                 sell_signal = self.strategy.calculate_sell_signal()
 

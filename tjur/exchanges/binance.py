@@ -276,7 +276,7 @@ class Binance:
     def _get(self, path, params):
         try:
             url = '%s?%s' % (path, urlencode(params))
-            init_request = requests.get(url, timeout=60, verify=False)
+            init_request = requests.get(url, timeout=30, verify=True)
             request = init_request.json()
             init_request.close()
             if 'msg' in request:
