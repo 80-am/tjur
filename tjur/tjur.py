@@ -1,10 +1,19 @@
+#!/usr/bin/env python3
 import config
+import curses
 
-from decimal import Decimal
 from analysis.performance import Performance
+from decimal import Decimal
 from criterion import Criterion
 from exchanges.binance import Binance
 from log.logger import Logger
+from sockets import Socket
+from ui.colors import Colors
+from ui.components.actions import Actions
+from ui.components.history import History
+from ui.components.logo import Logo
+from ui.components.recent import Recent
+from ui.components.rolling import Rolling
 
 
 API_KEY = config.BINANCE['api_key']
@@ -28,38 +37,55 @@ class Tjur:
         self.position_percentage = strategy['position']['percentage']
         self.time_frame = strategy['time_frame']
         self.win_target = strategy['win_target']
+        self.action = []
+        self.socket = Socket(self.symbol)
 
-    def calculate_signals(self):
+    def trade(self, stdscr):
         """
-        Calculates when to send signal to buy or sell.
+        Running calculations and drawing ui
         """
 
-        signal = 0
-        if (self.strategy.calculate_buy_signal()
-                and not binance.get_open_orders(self.symbol)):
-            position_size = self.get_position_size('BUY')
-            price = self.get_position_price()
-            buy_order = self.buy(position_size, price)
-            signal = buy_order['signal']
+        self.init_curses(stdscr)
+        self.action.append('Calculating buy signal')
+        k = 0
+        while (k != ord('q')):
 
-            while (signal == 1):
-                latest_price = Decimal(
-                    binance.get_latest_price(self.symbol)['price']
-                    or buy_order['price'])
-                stop_loss = buy_order['price'] * Decimal(0.92)
-                sell_signal = self.strategy.calculate_sell_signal()
+            k = stdscr.getch()
+            signal = 0
+            self.update_ui(stdscr)
+            if (self.strategy.calculate_buy_signal()
+                    and not binance.get_open_orders(self.symbol)):
+                position_size = self.get_position_size('BUY')
+                price = self.get_position_price()
+                buy_order = self.buy(position_size, price)
+                signal = buy_order['signal']
+                self.update_ui(stdscr)
+                self.action.append('Calculating sell signal')
 
-                if ((stop_loss >= latest_price)
-                        or (sell_signal and latest_price
-                            >= buy_order['take_profit'])):
-                    position_size = self.get_position_size('SELL')
-                    price = self.get_position_price()
-                    sell_order = self.sell(position_size, price)
+                while (signal == 1):
+                    latest_price = Decimal(
+                        binance.get_latest_price(self.symbol)['price']
+                        or buy_order['price'])
+                    stop_loss = buy_order['price'] * Decimal(0.92)
+                    sell_signal = self.strategy.calculate_sell_signal()
+                    self.update_ui(stdscr)
+                    k = stdscr.getch()
 
-                    pl = Performance.calculate_pl(
-                        buy_order['price'], sell_order['price'])
-                    logger.log_print('Margin: ' + str(round(pl, 3)) + '%')
-                    signal = sell_order['signal']
+                    if ((stop_loss >= latest_price)
+                            or (sell_signal and latest_price
+                                >= buy_order['take_profit'])):
+                        position_size = self.get_position_size('SELL')
+                        price = self.get_position_price()
+                        sell_order = self.sell(position_size, price)
+
+                        pl = Performance.calculate_pl(
+                            buy_order['price'], sell_order['price'])
+                        logger.log('Margin: ' + str(round(pl, 3)) + '%')
+                        self.action.append('Sold! Margin: ' + str(round(pl, 3))
+                                           + '%')
+                        signal = sell_order['signal']
+                        self.action.append('Calculating buy signal')
+                        self.update_ui(stdscr)
 
     def get_position_size(self, side):
         if (self.amount_type == 2):
@@ -70,7 +96,7 @@ class Tjur:
                 cur_avg_price = binance.get_cur_avg_price(self.symbol)
                 return (Decimal(
                     self.position_percentage * balance_symbol2)
-                        / cur_avg_price.quantize(Decimal(10) ** -8))
+                    / cur_avg_price.quantize(Decimal(10) ** -8))
             elif(side == 'SELL'):
                 balance_symbol1 = binance.get_symbol_balance(
                     account, self.symbol1)
@@ -91,11 +117,13 @@ class Tjur:
             self.symbol, 'BUY', self.order_type, position_size, price)
         buy_price = Decimal(buy_order['fills'][0]['price'])
         take_profit = buy_price * self.win_target
-        logger.log_print('OrderId: ' + str(buy_order['orderId']) + ' Buying '
-                         + str(position_size) + ' ' + self.symbol1 + ' for '
-                         + '{:.8f}'.format(buy_price) + self.symbol2)
+        logger.log('OrderId: ' + str(buy_order['orderId']) + ' Buying '
+                   + str(position_size) + ' ' + self.symbol1 + ' for '
+                   + '{:.8f}'.format(buy_price) + self.symbol2)
         logger.log('Aiming to sell at ' + str(take_profit) + ' '
                    + self.symbol2)
+        self.action.append('Bought at ' + str(buy_price))
+        self.update_history()
         order = {
             'price': buy_price,
             'take_profit': take_profit,
@@ -106,18 +134,46 @@ class Tjur:
         sell_order = binance.create_new_order(
             self.symbol, 'SELL', self.order_type, position_size, price)
         sell_price = Decimal(sell_order['fills'][0]['price'])
-        logger.log_print('OrderId: ' + str(sell_order['orderId'] + ' Selling '
-                         + position_size + ' ' + self.symbol1 + ' for '
-                         + '{:.8f}'.format(sell_price) + self.symbol2))
+        logger.log('OrderId: ' + str(sell_order['orderId'] + ' Selling '
+                                     + position_size + ' ' + self.symbol1
+                                     + ' for ' + '{:.8f}'.format(sell_price)
+                                     + self.symbol2))
+        self.action.append('Sold at ' + str(sell_price))
+        self.update_history()
         order = {
             'price': sell_price,
             'signal': 0}
         return order
 
-    def trade(self):
+    def update_history(self):
+        self.history = binance.get_trade_history(self.symbol, 15)
+        self.history.reverse()
+
+    def init_curses(self, stdscr):
+        curses.curs_set(0)
+        stdscr.clear()
+        stdscr.refresh()
+        stdscr.nodelay(1)
+        Colors.init_colors()
+
+    def update_ui(self, stdscr):
+        stdscr.clear()
+        height, width = stdscr.getmaxyx()
+        Logo(self.symbol, curses, stdscr, ' tjur ').draw()
+        Rolling(self.socket, self.symbol, self.symbol2, 1, curses, stdscr,
+                width, ' 24h ').draw()
+        History(binance, self.history, 1, curses, stdscr, height, width,
+                ' history ').draw()
+        Actions(binance, self.action, curses, stdscr, height, width,
+                ' actions ').draw()
+        Recent(binance, self.symbol, curses, stdscr, height, width,
+               ' recent trades ').draw()
+        stdscr.refresh()
+
+    def run(self):
         try:
-            while True:
-                self.calculate_signals()
+            self.update_history()
+            curses.wrapper(self.trade)
 
         except KeyboardInterrupt:
             logger.log_print_and_exit('Exiting')
@@ -125,5 +181,4 @@ class Tjur:
 
 if __name__ == '__main__':
     strategy = criterias.select_strategy()
-    if (criterias.is_strategy_ready(strategy['strategy'])):
-        Tjur(strategy).trade()
+    Tjur(strategy).run()

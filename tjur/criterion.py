@@ -33,13 +33,13 @@ class Criterion:
                                            + symbol1)
         symbol = symbol1 + symbol2
         symbols = {
-                0: {
-                    'symbol': symbol1,
-                    'balance': balance_symbol1},
-                1: {
-                    'symbol': symbol2,
-                    'balance': balance_symbol2},
-                'symbol': symbol}
+            0: {
+                'symbol': symbol1,
+                'balance': balance_symbol1},
+            1: {
+                'symbol': symbol2,
+                'balance': balance_symbol2},
+            'symbol': symbol}
         self.validate_symbol(symbols['symbol'])
         return symbols
 
@@ -97,16 +97,20 @@ class Criterion:
             self.logger.log_print_and_exit('Invalid strategy')
 
         position = self.define_sizing(symbol)
+
+        while not (self.is_strategy_ready(selected)):
+            pass
+
         self.logger.log_print('Trading ' + symbol['symbol'])
         strategy = {
-                    'symbol': symbol,
-                    'strategy': selected,
-                    'average': average,
-                    'time_frame': time_frame,
-                    'short_term': short_term,
-                    'long_term': long_term,
-                    'win_target': win_target,
-                    'position': position}
+            'symbol': symbol,
+            'strategy': selected,
+            'average': average,
+            'time_frame': time_frame,
+            'short_term': short_term,
+            'long_term': long_term,
+            'win_target': win_target,
+            'position': position}
         return strategy
 
     def define_sizing(self, symbols):
@@ -119,11 +123,15 @@ class Criterion:
         print('[2] Percentage of', symbols[1]['symbol'], 'balance')
         amount_type = int(input('Select amount type: ') or 1)
         cur_avg_price = self.exchange.get_cur_avg_price(symbols['symbol'])
+        position_size = 10
+        position_percentage = Decimal(
+            (cur_avg_price * position_size) / symbols[1]['balance']
+        ).quantize(Decimal(10) ** -2) * 100
         if (amount_type == 1):
             position_size = Decimal(input('Select position sizing: '))
             position_percentage = Decimal(
                 (cur_avg_price * position_size) / symbols[1]['balance']
-                ).quantize(Decimal(10) ** -2) * 100
+            ).quantize(Decimal(10) ** -2) * 100
             if (position_percentage > Decimal(100.0)
                     or position_percentage == Decimal(1.00)):
                 self.logger.log_print_and_exit('Insufficient funds')
@@ -180,7 +188,7 @@ class Criterion:
                         input('Select position sizing: '))
                     position['percentage'] = ((
                         cur_avg_price * position['size'])
-                            / symbols[1]['balance'])
+                        / symbols[1]['balance'])
                     position['percentage'] = Decimal(
                         position['percentage']).quantize(Decimal(10) ** -2)
                     print(str(position['size']), 'is about', str(
@@ -205,7 +213,7 @@ class Criterion:
         if (position['amount_type'] == 2):
             cur_avg_price = self.exchange.get_cur_avg_price(symbols['symbol'])
             position['size'] = ((position['percentage']
-                                * symbols[1]['balance']) / cur_avg_price)
+                                 * symbols[1]['balance']) / cur_avg_price)
             steps = position['rules']['steps'].find('1') - 1
             step_precision = Decimal(10) ** -steps
             if (Decimal(steps) > 1):
@@ -225,7 +233,21 @@ class Criterion:
 
     def is_strategy_ready(self, strategy):
         ready = False
+        start = ''
         while not ready:
-            if (strategy.is_ready()):
-                self.logger.log_print('Strategy ready')
-                return True
+            try:
+                if (strategy.is_ready()):
+                    self.logger.log('Strategy ready')
+                    return True
+                elif (start == ''):
+                    self.logger.log_print('Ongoing upward trend')
+                    start = input('Start anyway? [y/N] ').lower()
+                    if (start == 'y'):
+                        return True
+                    else:
+                        start = 'n'
+                        self.logger.log_print('Waiting for ready signal')
+                else:
+                    pass
+            except KeyboardInterrupt:
+                self.logger.log_print_and_exit('Exiting')

@@ -1,5 +1,6 @@
-pandas==0.25.3
-requests==2.22.0
-urllib3==1.25.7
+websockets==7.0
 numpy==1.18.1
+pandas==0.25.3
+urllib3==1.25.7
+requests==2.22.0
 TA_Lib==0.4.17

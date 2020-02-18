@@ -207,6 +207,20 @@ class Binance:
         params = {'symbol': symbol}
         return self.sign_payload('GET', path, params)
 
+    def get_trade_history(self, symbol, limit):
+        """
+        Args:
+        symbol (str): Symbol to get orders for
+        limit (int): Number of orders to get (max 1000)
+        """
+
+        path = '%s/myTrades?' % self.BASE_V3_URL
+        if not (limit):
+            limit = 500
+        params = {'symbol': symbol,
+                  'limit': limit}
+        return self.sign_payload('GET', path, params)
+
     # Creates and validates a new order
     def create_new_order(self, symbol, side, order_type, quantity, price):
         """
@@ -283,7 +297,7 @@ class Binance:
                 print(request['msg'])
                 logging.error(request['msg'])
             return request
-        except:
+        except Exception:
             Timeout
             print('Exception', url)
             pass
