@@ -160,14 +160,14 @@ class Tjur:
         stdscr.clear()
         height, width = stdscr.getmaxyx()
         Logo(self.symbol, curses, stdscr, ' tjur ').draw()
-        Rolling(self.socket, self.symbol, self.symbol2, 1, curses, stdscr,
-                width, ' 24h ').draw()
-        History(binance, self.history, 1, curses, stdscr, height, width,
-                ' history ').draw()
+        Rolling(self.socket, strategy['symbol'], curses, stdscr, width,
+                ' 24h ').draw()
+        History(binance, strategy['symbol'], self.history, 1, curses, stdscr,
+                height, width, ' history ').draw()
         Actions(binance, self.action, curses, stdscr, height, width,
                 ' actions ').draw()
-        Recent(binance, self.symbol, curses, stdscr, height, width,
-               ' recent trades ').draw()
+        Recent(self.socket, binance, strategy['symbol'], curses, stdscr,
+               height, width, ' recent trades ').draw()
         stdscr.refresh()
 
     def run(self):

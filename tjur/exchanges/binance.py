@@ -146,10 +146,10 @@ class Binance:
                 logging.info('Balance for ' + symbol + ' : ' + assets['free'])
                 return Decimal(assets['free'])
 
-    def get_symbol_min_quantity(self, symbols):
+    def get_symbol_filters(self, symbols):
         """
         Args:
-        symbols (str): Symbol pair to check min quantity per trade allowed
+        symbols (str): Symbol pair to gather filter rules
 
         Returns:
         Decimal
@@ -158,41 +158,22 @@ class Binance:
         exchange_info = self.exchange_info()
         for pairing in exchange_info['symbols']:
             if (pairing['symbol'] == symbols):
+                quote_precision = pairing['quotePrecision']
                 for filter in pairing['filters']:
                     if (filter['filterType'] == 'LOT_SIZE'):
-                        return Decimal(filter['minQty'])
-
-    def get_symbol_max_quantity(self, symbols):
-        """
-        Args:
-        symbols (str): Symbol pair to check max quantity per trade allowed
-
-        Returns:
-        Decimal
-        """
-
-        exchange_info = self.exchange_info()
-        for pairing in exchange_info['symbols']:
-            if (pairing['symbol'] == symbols):
-                for filter in pairing['filters']:
-                    if (filter['filterType'] == 'LOT_SIZE'):
-                        return Decimal(filter['maxQty'])
-
-    def get_symbol_stepsize(self, symbols):
-        """
-        Args:
-        symbols (str): Symbol pair to check stepsize
-
-        Returns:
-        string
-        """
-
-        exchange_info = self.exchange_info()
-        for pairing in exchange_info['symbols']:
-            if (pairing['symbol'] == symbols):
-                for filter in pairing['filters']:
-                    if (filter['filterType'] == 'LOT_SIZE'):
-                        return filter['stepSize']
+                        min_qty = Decimal(filter['minQty'])
+                        max_qty = Decimal(filter['maxQty'])
+                        steps = Decimal(filter['stepSize'])
+                    if (filter['filterType'] == 'PRICE_FILTER'):
+                        tick_size = abs(Decimal(str(Decimal(filter['tickSize'])
+                                        .normalize().as_tuple().exponent)))
+        filters = {
+            'quote_precision': quote_precision,
+            'min_qty': min_qty,
+            'max_qty': max_qty,
+            'steps': steps,
+            'tick_size': tick_size}
+        return filters
 
     def get_open_orders(self, symbol):
         """

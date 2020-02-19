@@ -32,6 +32,7 @@ class Criterion:
             self.logger.log_print_and_exit('No holdings in account for '
                                            + symbol1)
         symbol = symbol1 + symbol2
+        filter_rules = self.exchange.get_symbol_filters(symbol)
         symbols = {
             0: {
                 'symbol': symbol1,
@@ -39,7 +40,8 @@ class Criterion:
             1: {
                 'symbol': symbol2,
                 'balance': balance_symbol2},
-            'symbol': symbol}
+            'symbol': symbol,
+            'filters': filter_rules}
         self.validate_symbol(symbols['symbol'])
         return symbols
 
@@ -115,9 +117,6 @@ class Criterion:
 
     def define_sizing(self, symbols):
         order_type = self.select_order_type()
-        min_qty = self.exchange.get_symbol_min_quantity(symbols['symbol'])
-        max_qty = self.exchange.get_symbol_max_quantity(symbols['symbol'])
-        steps = self.exchange.get_symbol_stepsize(symbols['symbol'])
         print('\nAvailable amount types:')
         print('[1] Fixed amount (Default)')
         print('[2] Percentage of', symbols[1]['symbol'], 'balance')
@@ -157,11 +156,7 @@ class Criterion:
             'amount_type': amount_type,
             'size': position_size,
             'percentage': position_percentage,
-            'order_type': order_type,
-            'rules': {
-                'min_qty': min_qty,
-                'max_qty': max_qty,
-                'steps': steps}}
+            'order_type': order_type}
         self.validate_position(symbols, position)
         return position
 
@@ -214,7 +209,7 @@ class Criterion:
             cur_avg_price = self.exchange.get_cur_avg_price(symbols['symbol'])
             position['size'] = ((position['percentage']
                                  * symbols[1]['balance']) / cur_avg_price)
-            steps = position['rules']['steps'].find('1') - 1
+            steps = position['filters']['steps'].find('1') - 1
             step_precision = Decimal(10) ** -steps
             if (Decimal(steps) > 1):
                 position['size'] = Decimal(position['size']).quantize(
@@ -222,7 +217,7 @@ class Criterion:
             else:
                 position['size'] = int(position['size'])
 
-        if (position['size'] < position['rules']['min_qty']):
+        if (position['size'] < symbols['symbol']['filters']['min_qty']):
             self.logger.log_print_and_exit('Amount' + str(position['size'])
                                            + ' too low')
 

@@ -1,12 +1,14 @@
-from ui.drawing import Draw
 from datetime import datetime
+from decimal import Decimal
+from ui.drawing import Draw
 
 
 class History:
 
-    def __init__(self, exchange, history, minQty, curses, stdscr, height,
-                 width, title):
+    def __init__(self, exchange, symbol, history, minQty, curses, stdscr,
+                 height, width, title):
         self.exchange = exchange
+        self.symbol = symbol
         self.history = history
         self.minQty = minQty
         self.curses = curses
@@ -14,6 +16,9 @@ class History:
         self.height = height
         self.width = width
         self.title = title
+        self.tick_size = symbol['filters']['tick_size']
+        self.quote_precision = symbol['filters']['quote_precision']
+        self.min_qty = symbol['filters']['min_qty']
         if (self.minQty == 1):
             self.decToHide = 9
         else:
@@ -49,13 +54,25 @@ class History:
 
         for i, trade in enumerate(self.history, 0):
             self.stdscr.addstr((startY + 2) + i, 26,
-                               self.history[i]['qty'][:-self.decToHide],
+                               self.format_qty(self.history[i]['qty']),
                                self.curses.color_pair(6))
 
         for i, trade in enumerate(self.history, 0):
             self.stdscr.addstr((startY + 2) + i, 39,
-                               self.history[i]['price'],
+                               self.format_price(self.history[i]['price']),
                                self.curses.color_pair(6))
 
         Draw(self.curses, self.stdscr, startY, self.height, 0,
              int(self.width - (self.width * 0.30)), self.title).draw_border()
+
+    def format_qty(self, val):
+        if (self.min_qty < 1):
+            return val[:self.quote_precision]
+        else:
+            return val.split(".")[0]
+
+    def format_price(self, val):
+        if (self.tick_size < 8):
+            return str(Decimal(val).quantize(Decimal(10) ** -self.tick_size))
+        else:
+            return str(val)
