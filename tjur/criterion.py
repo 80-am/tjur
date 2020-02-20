@@ -50,8 +50,15 @@ class Criterion:
         if ('Invalid symbol' in check_symbol):
             self.logger.log_print_and_exit(symbol + 'is not a valid symbol')
 
-    def select_strategy(self):
+    def select_strategy(self, trade_mode):
         symbol = self.define_symbols()
+        if not (trade_mode):
+            strategy = {
+                'symbol': symbol,
+                'strategy': Maco('EMA', symbol['symbol'], '5m', 9, 26,
+                                 self.logger)}
+            return strategy
+
         print('\nAvailable strategies:')
         print('[1] Moving Average Cross Over (Default)')
         print('[2] Moving Average Convergence/Divergence (MACD)')

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import config
 import curses
+import sys
 
 from analysis.performance import Performance
+from argument_parser import Parser
 from decimal import Decimal
 from criterion import Criterion
 from exchanges.binance import Binance
@@ -26,19 +28,21 @@ criterias = Criterion(binance, logger)
 
 class Tjur:
 
-    def __init__(self, strategy):
+    def __init__(self, strategy, trade_mode):
         self.strategy = strategy['strategy']
+        self.trade_mode = trade_mode
         self.symbol = strategy['symbol']['symbol']
         self.symbol1 = strategy['symbol'][0]['symbol']
         self.symbol2 = strategy['symbol'][1]['symbol']
-        self.order_type = strategy['position']['order_type']
-        self.amount_type = strategy['position']['amount_type']
-        self.position_size = strategy['position']['size']
-        self.position_percentage = strategy['position']['percentage']
-        self.time_frame = strategy['time_frame']
-        self.win_target = strategy['win_target']
         self.action = []
         self.socket = Socket(self.symbol)
+        if (trade_mode):
+            self.order_type = strategy['position']['order_type']
+            self.amount_type = strategy['position']['amount_type']
+            self.position_size = strategy['position']['size']
+            self.position_percentage = strategy['position']['percentage']
+            self.time_frame = strategy['time_frame']
+            self.win_target = strategy['win_target']
 
     def trade(self, stdscr):
         """
@@ -46,14 +50,17 @@ class Tjur:
         """
 
         self.init_curses(stdscr)
-        self.action.append('Calculating buy signal')
+        if not (self.trade_mode):
+            self.action.append('Demo mode')
+        else:
+            self.action.append('Calculating buy signal')
         k = 0
         while (k != ord('q')):
 
             k = stdscr.getch()
             signal = 0
             self.update_ui(stdscr)
-            if (self.strategy.calculate_buy_signal()
+            if (self.trade_mode and self.strategy.calculate_buy_signal()
                     and not binance.get_open_orders(self.symbol)):
                 position_size = self.get_position_size('BUY')
                 price = self.get_position_price()
@@ -180,5 +187,15 @@ class Tjur:
 
 
 if __name__ == '__main__':
-    strategy = criterias.select_strategy()
-    Tjur(strategy).run()
+    parser = Parser()
+    args = parser.parse()
+
+    if (args.help):
+        parser.print_help()
+        sys.exit(0)
+    if (args.version):
+        print(parser.get_version())
+
+    trade_mode = args.trade
+    strategy = criterias.select_strategy(trade_mode)
+    Tjur(strategy, trade_mode).run()
