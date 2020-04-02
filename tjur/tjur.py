@@ -12,9 +12,9 @@ from log.logger import Logger
 from sockets import Socket
 from ui.colors import Colors
 from ui.components.actions import Actions
+from ui.components.book import Book
 from ui.components.history import History
 from ui.components.logo import Logo
-from ui.components.recent import Recent
 from ui.components.rolling import Rolling
 
 
@@ -35,7 +35,8 @@ class Tjur:
         self.symbol1 = strategy['symbol'][0]['symbol']
         self.symbol2 = strategy['symbol'][1]['symbol']
         self.action = []
-        self.socket = Socket(self.symbol)
+        self.socket_ticker = Socket(logger, self.symbol, '@ticker')
+        self.socket_book = Socket(logger, self.symbol, '@depth@100ms')
         if (trade_mode):
             self.order_type = strategy['position']['order_type']
             self.amount_type = strategy['position']['amount_type']
@@ -167,14 +168,14 @@ class Tjur:
         stdscr.clear()
         height, width = stdscr.getmaxyx()
         Logo(self.symbol, curses, stdscr, ' tjur ').draw()
-        Rolling(self.socket, strategy['symbol'], curses, stdscr, width,
-                ' 24h ').draw()
+        Rolling(self.socket_ticker, strategy['symbol'], curses, stdscr, height,
+                width, ' 24h ').draw()
         History(binance, strategy['symbol'], self.history, 1, curses, stdscr,
                 height, width, ' history ').draw()
         Actions(binance, self.action, curses, stdscr, height, width,
                 ' actions ').draw()
-        Recent(self.socket, binance, strategy['symbol'], curses, stdscr,
-               height, width, ' recent trades ').draw()
+        Book(self.socket_book, strategy['symbol'], curses,
+             stdscr, height, width, ' order book ').draw()
         stdscr.refresh()
 
     def run(self):

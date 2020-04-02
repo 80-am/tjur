@@ -13,7 +13,13 @@ class Actions:
         self.title = title
 
     def draw(self):
+        if (self.height < 30):
+            return
+
         endY = self.height - 18
+        endX = int(self.width * 0.75)
+        if ((self.width - endX) < 42):
+            endX = self.width - 42
 
         for i, val in enumerate(self.action):
             if (10 + i < endY + 1):
@@ -21,5 +27,5 @@ class Actions:
             else:
                 self.action.pop()
 
-        Draw(self.curses, self.stdscr, 8, endY, 0, int(self.width
-             - (self.width * 0.30)), self.title).draw_border()
+        Draw(self.curses, self.stdscr, 8, endY, 0, endX,
+             self.title).draw_border()

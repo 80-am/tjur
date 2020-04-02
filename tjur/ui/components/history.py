@@ -26,14 +26,20 @@ class History:
 
     def draw(self):
         startY = int(self.height * 0.39)
+        endX = int(self.width * 0.75)
+        if ((self.width - endX) < 42):
+            endX = self.width - 42
         distance = self.height - startY
         if (distance > 18):
             startY = self.height - 18
+
         self.stdscr.addstr(startY + 1, 4, 'time',
                            self.curses.color_pair(4))
-        self.stdscr.addstr(startY + 1, 26, 'qty',
+        self.stdscr.addstr(startY + 1, 26, 'price',
                            self.curses.color_pair(4))
-        self.stdscr.addstr(startY + 1, 39, 'price',
+        self.stdscr.addstr(startY + 1, 39, 'qty',
+                           self.curses.color_pair(4))
+        self.stdscr.addstr(startY + 1, 50, 'total',
                            self.curses.color_pair(4))
 
         for i, trade in enumerate(self.history, 0):
@@ -53,17 +59,20 @@ class History:
                 self.curses.color_pair(6))
 
         for i, trade in enumerate(self.history, 0):
+            history = self.history[i]
             self.stdscr.addstr((startY + 2) + i, 26,
-                               self.format_qty(self.history[i]['qty']),
+                               self.format_price(history['price']),
                                self.curses.color_pair(6))
-
-        for i, trade in enumerate(self.history, 0):
             self.stdscr.addstr((startY + 2) + i, 39,
-                               self.format_price(self.history[i]['price']),
+                               self.format_qty(history['qty']),
+                               self.curses.color_pair(6))
+            self.stdscr.addstr((startY + 2) + i, 50, self.format_price(
+                               Decimal(history['price'])
+                               * Decimal(history['qty'])),
                                self.curses.color_pair(6))
 
-        Draw(self.curses, self.stdscr, startY, self.height, 0,
-             int(self.width - (self.width * 0.30)), self.title).draw_border()
+        Draw(self.curses, self.stdscr, startY, self.height, 0, endX,
+             self.title).draw_border()
 
     def format_qty(self, val):
         if (self.min_qty < 1):
@@ -72,7 +81,7 @@ class History:
             return val.split(".")[0]
 
     def format_price(self, val):
-        if (self.tick_size < 8):
+        if (self.tick_size <= 8):
             return str(Decimal(val).quantize(Decimal(10) ** -self.tick_size))
         else:
             return str(val)
