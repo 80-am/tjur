@@ -1,10 +1,7 @@
-from exchanges.binance import Binance
 from indicators.ma import MovingAverages
 
-binance = Binance('apikey', 'apisecret')
 
-
-class Maco:
+class Maco():
     """
     Moving Average(MA) Cross-Over strategy.
 
@@ -20,8 +17,9 @@ class Maco:
     TODO: price_type (str): Type of price (OHLC) i.e High or Close
     """
 
-    def __init__(self, ma_type, symbol, time_frame, short_ticks, long_ticks,
+    def __init__(self, exchange, ma_type, symbol, time_frame, short_ticks, long_ticks,
                  logger):
+        self.exchange = exchange
         self.ma_type = ma_type.lower()
         self.symbol = symbol
         self.time_frame = time_frame
@@ -40,20 +38,20 @@ class Maco:
         bool
         """
 
-        short_ma_price = binance.get_historical_price(
+        short_ma_price = self.exchange.get_historical_price(
             self.symbol, self.time_frame, self.short_ticks)
-        long_ma_price = binance.get_historical_price(
+        long_ma_price = self.exchange.get_historical_price(
             self.symbol, self.time_frame, self.long_ticks)
-        if (self.ma_type == 'sma'):
+        if self.ma_type == 'sma':
             short_ma = MovingAverages.get_sma(short_ma_price, self.short_ticks)
             long_ma = MovingAverages.get_sma(long_ma_price, self.long_ticks)
-        elif (self.ma_type == 'ema'):
+        elif self.ma_type == 'ema':
             short_ma = MovingAverages.get_ema(short_ma_price, self.short_ticks)
             long_ma = MovingAverages.get_ema(long_ma_price, self.long_ticks)
         else:
             print('Please use a supported moving average')
 
-        if (short_ma > long_ma):
+        if short_ma > long_ma:
             self.logger.log('Golden crossing: Short MA (' + str(short_ma)
                             + ') greater than long MA (' + str(long_ma) + ')')
             return True
@@ -69,14 +67,14 @@ class Maco:
         bool
         """
 
-        short_ma_price = binance.get_historical_price(
+        short_ma_price = self.exchange.get_historical_price(
             self.symbol, self.time_frame, self.short_ticks)
-        long_ma_price = binance.get_historical_price(
+        long_ma_price = self.exchange.get_historical_price(
             self.symbol, self.time_frame, self.long_ticks)
-        if (self.ma_type == 'sma'):
+        if self.ma_type == 'sma':
             short_ma = MovingAverages.get_sma(short_ma_price, self.short_ticks)
             long_ma = MovingAverages.get_sma(long_ma_price, self.long_ticks)
-        elif (self.ma_type == 'ema'):
+        elif self.ma_type == 'ema':
             short_ma = MovingAverages.get_ema(short_ma_price, self.short_ticks)
             long_ma = MovingAverages.get_ema(long_ma_price, self.long_ticks)
         else:

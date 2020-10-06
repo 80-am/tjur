@@ -12,7 +12,7 @@ API_SECRET = config.BINANCE['api_secret']
 tjur_dir = os.path.dirname(sys.argv[0])
 
 
-class Criterion:
+class Criterion():
     with open(tjur_dir + '/assets/start-up.txt', 'r') as f:
         print(f.read())
 
@@ -24,7 +24,7 @@ class Criterion:
         account = self.exchange.get_account_information()
         symbol1 = input('Select first symbol to pair: ').upper()
         balance_symbol1 = self.exchange.get_symbol_balance(account, symbol1)
-        if (balance_symbol1):
+        if balance_symbol1:
             symbol2 = input('Select second symbol to pair: ').upper()
             balance_symbol2 = self.exchange.get_symbol_balance(
                 account, symbol2)
@@ -47,36 +47,30 @@ class Criterion:
 
     def validate_symbol(self, symbol):
         check_symbol = str(self.exchange.get_cur_avg_price(symbol))
-        if ('Invalid symbol' in check_symbol):
+        if 'Invalid symbol' in check_symbol:
             self.logger.log_print_and_exit(symbol + 'is not a valid symbol')
 
-    def select_strategy(self, trade_mode):
+    def select_strategy(self):
         symbol = self.define_symbols()
-        if not (trade_mode):
-            strategy = {
-                'symbol': symbol,
-                'strategy': Maco('EMA', symbol['symbol'], '5m', 9, 26,
-                                 self.logger)}
-            return strategy
 
         print('\nAvailable strategies:')
         print('[1] Moving Average Cross Over (Default)')
         print('[2] Moving Average Convergence/Divergence (MACD)')
 
         selected = int(input('Select strategy: ') or 1)
-        if (selected == 1):
+        if selected == 1:
             custom = input('Use custom parameters? [y/N] ').lower()
         else:
             custom = 'n'
 
-        if (custom == 'y'):
+        if custom == 'y':
             print('\nAvailable moving averages:')
             print('[1] Simple Moving Average (SMA)')
             print('[2] Exponential Moving Average (EMA)')
             average = int(input('Select average: '))
-            if (average == 1):
+            if average == 1:
                 average = 'sma'
-            elif (average == 2):
+            elif average == 2:
                 average = 'ema'
             else:
                 average = int(input('Select average: '))
@@ -94,20 +88,20 @@ class Criterion:
             long_term = 26
             win_target = Decimal(1.036)
 
-        if (short_term <= 0 or long_term <= 0):
+        if short_term <= 0 or long_term <= 0:
             self.logger.log_print_and_exit('Invalid period')
         self.validate_time_frame(time_frame)
-        if (selected == 1):
-            selected = Maco(average, symbol['symbol'], time_frame, short_term,
+        if selected == 1:
+            selected = Maco(self.exchange, average, symbol['symbol'], time_frame, short_term,
                             long_term, self.logger)
-        elif (selected == 2):
-            selected = Macd(symbol['symbol'], time_frame, self.logger)
+        elif selected == 2:
+            selected = Macd(self.exchange, symbol['symbol'], time_frame)
         else:
             self.logger.log_print_and_exit('Invalid strategy')
 
         position = self.define_sizing(symbol)
 
-        while not (self.is_strategy_ready(selected)):
+        while not self.is_strategy_ready(selected):
             pass
 
         self.logger.log_print('Trading ' + symbol['symbol'])
@@ -129,11 +123,7 @@ class Criterion:
         print('[2] Percentage of', symbols[1]['symbol'], 'balance')
         amount_type = int(input('Select amount type: ') or 1)
         cur_avg_price = self.exchange.get_cur_avg_price(symbols['symbol'])
-        position_size = 10
-        position_percentage = Decimal(
-            (cur_avg_price * position_size) / symbols[1]['balance']
-        ).quantize(Decimal(10) ** -2) * 100
-        if (amount_type == 1):
+        if amount_type == 1:
             position_size = Decimal(input('Select position sizing: '))
             position_percentage = Decimal(
                 (cur_avg_price * position_size) / symbols[1]['balance']
@@ -141,7 +131,7 @@ class Criterion:
             if (position_percentage > Decimal(100.0)
                     or position_percentage == Decimal(1.00)):
                 self.logger.log_print_and_exit('Insufficient funds')
-            if (position_percentage < 0.01):
+            if position_percentage < 0.01:
                 print(str(position_size), symbols[0]['symbol'],
                       'is less than 0.01% of', symbols[1]['symbol'],
                       'balance at current price')
@@ -172,20 +162,19 @@ class Criterion:
         print('[1] Market (Default)')
         print('[2] Limit')
         order_type = input('Select order type: ').upper()
-        if (order_type == '2' or order_type == 'LIMIT'):
+        if order_type in ('2', 'LIMIT'):
             return 'LIMIT'
-        else:
-            return 'MARKET'
+        return 'MARKET'
 
     def validate_position(self, symbols, position):
-        if (position['percentage'] > 0.05):
+        if position['percentage'] < 0.05:
             return None
-        while (position['percentage'] > 0.05):
+        while position['percentage'] > 0.05:
             print('Using a position sizing above 5% is not recommended')
             confirm = input('Continue anyway? [y/N] ').upper()
             cur_avg_price = self.exchange.get_cur_avg_price(symbols['symbol'])
-            if not (confirm == 'Y'):
-                if (position['amount_type'] == 1):
+            if not confirm == 'Y':
+                if position['amount_type'] == 1:
                     position['size'] = Decimal(
                         input('Select position sizing: '))
                     position['percentage'] = ((
@@ -199,7 +188,7 @@ class Criterion:
                 else:
                     position['percentage'] = Decimal(
                         input('Select position sizing (%): ')) / 100
-                    if (position['percentage'] <= Decimal(1.0)):
+                    if position['percentage'] <= Decimal(1.0):
                         position['size'] = Decimal(
                             ((position['percentage'] * symbols[1]['balance'])
                                 / cur_avg_price).quantize(Decimal(10) ** -8))
@@ -212,19 +201,18 @@ class Criterion:
             else:
                 break
 
-        if (position['amount_type'] == 2):
+        if position['amount_type'] == 2:
             cur_avg_price = self.exchange.get_cur_avg_price(symbols['symbol'])
             position['size'] = ((position['percentage']
                                  * symbols[1]['balance']) / cur_avg_price)
-            steps = position['filters']['steps'].find('1') - 1
+            steps = str(symbols['filters']['steps']).find('1') - 1
             step_precision = Decimal(10) ** -steps
-            if (Decimal(steps) > 1):
+            if Decimal(steps) > 1:
                 position['size'] = Decimal(position['size']).quantize(
                     step_precision)
             else:
                 position['size'] = int(position['size'])
-
-        if (position['size'] < symbols['symbol']['filters']['min_qty']):
+        if position['size'] < symbols['filters']['min_qty']:
             self.logger.log_print_and_exit('Amount' + str(position['size'])
                                            + ' too low')
 
@@ -238,17 +226,16 @@ class Criterion:
         start = ''
         while not ready:
             try:
-                if (strategy.is_ready()):
+                if strategy.is_ready():
                     self.logger.log('Strategy ready')
                     return True
-                elif (start == ''):
+                if start == '':
                     self.logger.log_print('Ongoing upward trend')
                     start = input('Start anyway? [y/N] ').lower()
-                    if (start == 'y'):
+                    if start == 'y':
                         return True
-                    else:
-                        start = 'n'
-                        self.logger.log_print('Waiting for ready signal')
+                    start = 'n'
+                    self.logger.log_print('Waiting for ready signal')
                 else:
                     pass
             except KeyboardInterrupt:

@@ -1,9 +1,10 @@
 import numpy as np
 
 
-class Volatility:
+class Volatility():
 
     # Average True Range
+    @staticmethod
     def get_atr(data, trend_periods=14, open_col='Open', high_col='High', low_col='Low', close_col='Close'):
         for index, row in data.iterrows():
             prices = [row[high_col], row[low_col],

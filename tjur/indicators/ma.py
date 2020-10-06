@@ -1,9 +1,10 @@
 import numpy as np
 
 
-class MovingAverages:
+class MovingAverages():
 
     # Simple Moving Average
+    @staticmethod
     def get_sma(price, period):
         j = next(i for i, x in enumerate(price) if x is not None)
         our_range = range(len(price))[j + period - 1:]
@@ -13,6 +14,7 @@ class MovingAverages:
 
     # Exponential Moving Average
     # TODO: Might transfer into ta-lib for better accuracy
+    @staticmethod
     def get_ema(price, period):
         df = price['Close']
         df = df.ewm(span=period, min_periods=period - 1,

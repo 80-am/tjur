@@ -11,10 +11,6 @@ class Parser(object):
 
     def _add_arguments(self):
         self._parser.add_argument(
-            '-t', '--trade',
-            action='store_true',
-            help='start tjur in trade mode')
-        self._parser.add_argument(
             '-v', '--version',
             action='store_true',
             help=self.get_version())

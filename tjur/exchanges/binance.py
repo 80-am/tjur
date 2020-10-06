@@ -2,7 +2,6 @@ import datetime
 import hashlib
 import hmac
 import json
-import logging
 import pandas as pd
 import requests
 import sys
@@ -10,13 +9,13 @@ import time
 import urllib3
 
 from decimal import Decimal
-from requests.exceptions import Timeout
 from urllib.parse import urlencode
+from requests.exceptions import Timeout
 
 # Interface to Binance public Rest API
 
 
-class Binance:
+class Binance():
 
     BASE_URL = 'https://www.binance.com/api/v1'
     BASE_V3_URL = 'https://api.binance.com/api/v3'
@@ -24,9 +23,10 @@ class Binance:
     pd.set_option('display.max_colwidth', -1)
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    def __init__(self, key, secret):
+    def __init__(self, key, secret, logger):
         self.key = key
         self.secret = secret
+        self.logger = logger
 
     # Test connectivity to the Rest API and return server time
     def check_connection(self):
@@ -92,6 +92,10 @@ class Binance:
                   'limit': limit}
         raw_historical = self._get(path, params)
         df = pd.read_json(json.dumps(raw_historical))
+        if df.empty:
+            self.logger.log_print(path + str(params) + " response empty.")
+            return None
+
         df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume',
                       'Close time', 'Quote asset volume', 'Number of trades',
                       'Taker buy base asset volume',
@@ -142,8 +146,7 @@ class Binance:
 
         for assets in account['balances']:
             if assets['asset'] == symbol:
-                print('Balance for', symbol, ':', assets['free'])
-                logging.info('Balance for ' + symbol + ' : ' + assets['free'])
+                self.logger.log_print('Balance for ' + symbol + ' : ' + assets['free'])
                 return Decimal(assets['free'])
 
     def get_symbol_filters(self, symbols):
@@ -157,15 +160,15 @@ class Binance:
 
         exchange_info = self.exchange_info()
         for pairing in exchange_info['symbols']:
-            if (pairing['symbol'] == symbols):
+            if pairing['symbol'] == symbols:
                 quote_precision = pairing['quotePrecision']
-                for filter in pairing['filters']:
-                    if (filter['filterType'] == 'LOT_SIZE'):
-                        min_qty = Decimal(filter['minQty'])
-                        max_qty = Decimal(filter['maxQty'])
-                        steps = Decimal(filter['stepSize'])
-                    if (filter['filterType'] == 'PRICE_FILTER'):
-                        tick_size = abs(Decimal(str(Decimal(filter['tickSize'])
+                for filt in pairing['filters']:
+                    if filt['filterType'] == 'LOT_SIZE':
+                        min_qty = Decimal(filt['minQty'])
+                        max_qty = Decimal(filt['maxQty'])
+                        steps = Decimal(filt['stepSize'])
+                    if filt['filterType'] == 'PRICE_FILTER':
+                        tick_size = abs(Decimal(str(Decimal(filt['tickSize'])
                                         .normalize().as_tuple().exponent)))
         filters = {
             'quote_precision': quote_precision,
@@ -196,7 +199,7 @@ class Binance:
         """
 
         path = '%s/myTrades?' % self.BASE_V3_URL
-        if not (limit):
+        if not limit:
             limit = 500
         params = {'symbol': symbol,
                   'limit': limit}
@@ -220,7 +223,7 @@ class Binance:
                   'type': order_type,
                   'quantity': quantity,
                   'recvWindow': 4000}
-        if (order_type == 'LIMIT'):
+        if order_type == 'LIMIT':
             params = params.copy()
             params.update({'price': price,
                            'timeInForce': 'GTC'})
@@ -235,6 +238,7 @@ class Binance:
         side (str): Order side i.e buy or sell
         order_type (str): Order type i.e MARKET
         quantity (decimal): Position sizing, quantity to trade
+        price (str): Price of position
         """
 
         path = '%s/order/test?' % self.BASE_V3_URL
@@ -243,9 +247,11 @@ class Binance:
             'side': side,
             'type': order_type,
             'quantity': quantity,
-            'price': price,
-            'timeInForce': 'GTC',
             'recvWindow': 4000}
+        if order_type == 'LIMIT':
+            params = params.copy()
+            params.update({'price': price,
+                           'timeInForce': 'GTC'})
 
         return self.sign_payload('POST', path, params)
 
@@ -259,12 +265,11 @@ class Binance:
         resp = requests.request(method, path + query,
                                 headers={"X-MBX-APIKEY": self.key})
         data = resp.json()
-        logging.info(data)
+        self.logger.log(data)
         if 'msg' in data:
-            print(data['msg'])
-            logging.error(data['msg'])
-            if ('Filter failure' in data['msg']):
-                print('Exiting')
+            self.logger.log_print(data['msg'])
+            if 'Filter failure' in data['msg']:
+                self.logger.log_print_and_exit('Exiting')
                 sys.exit(0)
         return data
 
@@ -275,12 +280,11 @@ class Binance:
             request = init_request.json()
             init_request.close()
             if 'msg' in request:
-                print(request['msg'])
-                logging.error(request['msg'])
+                self.logger.log_print(request['msg'])
             return request
         except Exception:
             Timeout
-            print('Exception', url)
+            self.logger.log(Exception)
             pass
 
     def _post(self, path, params):

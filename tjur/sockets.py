@@ -5,7 +5,7 @@ import requests
 import websockets
 
 
-class Socket:
+class Socket():
     def __init__(self, logger, symbol, stream):
         self.logger = logger
         self.symbol = symbol.upper()
@@ -18,51 +18,48 @@ class Socket:
         self.updates = 0
         self.sub_ready = False
         self.stream_ready = False
-        if (stream == '@depth@100ms'):
+        if stream == '@depth@100ms':
             self.id = 'depthUpdate'
-        if (stream == '@ticker'):
+        if stream == '@ticker':
             self.id = '24hrTicker'
 
     def get_ticker(self):
         data = self.on_msg()
-        if (data is None):
-            if not (self.ws.open):
+        if data is None:
+            if not self.ws.open:
                 self.loop.run_until_complete(self.__async__connect())
             return self.ticker
-        else:
-            data = json.loads(data)
+        data = json.loads(data)
+
         self.ticker = self.ticker.append(data, ignore_index=True)
-        if (len(self.ticker.index) > 2):
+        if len(self.ticker.index) > 2:
             self.ticker.drop(self.ticker.index[:1], inplace=True)
         return self.ticker
 
     def get_book(self):
         data = self.on_msg()
-        if (data is None):
+        if data is None:
             self.logger.log('No data in book')
             self.restart_socket()
             return self.book
-        else:
-            data = json.loads(data)
+        data = json.loads(data)
 
-        if (data.get('U') is None):
+        if data.get('U') is None:
             return self.book
-        else:
-            self.last_u = data.get('U')
+        self.last_u = data.get('U')
 
-        if (len(self.book) == 0):
+        if len(self.book) == 0:
             self.logger.log('Getting snapshot')
             self.book = self.get_snapshot()
             return self.book
 
-        # if (self.book.get('bids') is None):
-        if not (self.book.get('bids')):
+        if not self.book.get('bids'):
             self.logger.log('Bids or asks empty')
             self.restart_socket()
 
         lastUpdateId = self.book.get('lastUpdateId')
 
-        if (self.updates == 0):
+        if self.updates == 0:
             if ((data.get('U') <= lastUpdateId + 1)
                     and (data.get('u') >= lastUpdateId + 1)):
                 self.book['lastUpdateId'] = data['u']
@@ -82,15 +79,15 @@ class Socket:
         price, qty = update
 
         for x in range(0, len(self.book[side])):
-            if (price == self.book[side][x][0]):
-                if (float(qty) == 0.00000000):
+            if price == self.book[side][x][0]:
+                if float(qty) == 0.00000000:
                     del self.book[side][x]
                     break
                 else:
                     self.book[side][x] = update
                     break
-            elif (price > self.book[side][x][0]):
-                if (float(qty) != 0.00000000):
+            elif price > self.book[side][x][0]:
+                if float(qty) != 0.00000000:
                     self.book[side].insert(x, update)
                     break
                 else:

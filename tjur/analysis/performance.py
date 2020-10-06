@@ -1,5 +1,6 @@
 class Performance():
 
+    @staticmethod
     def calculate_pl(buy_price, sell_price):
         """
         Calculate margin out of gross margin.

@@ -2,12 +2,9 @@ import talib as ta
 import pandas as pd
 
 from decimal import Decimal
-from exchanges.binance import Binance
-
-binance = Binance('apikey', 'apisecret')
 
 
-class Macd:
+class Macd():
     """
     Moving Average Convergence/Divergence(MACD) strategy.
 
@@ -20,7 +17,8 @@ class Macd:
     time_frame (str): Trading time frame i.e 5m or 4h
     """
 
-    def __init__(self, symbol, time_frame):
+    def __init__(self, exchange, symbol, time_frame):
+        self.exchange = exchange
         self.symbol = symbol
         self.time_frame = time_frame
 
@@ -33,7 +31,7 @@ class Macd:
         bool
         """
 
-        raw_price = binance.get_historical_price(
+        raw_price = self.exchange.get_historical_price(
             self.symbol, self.time_frame, 60)
         prices = raw_price['Close']
         df = pd.DataFrame()
@@ -57,7 +55,7 @@ class Macd:
         bool
         """
 
-        raw_price = binance.get_historical_price(
+        raw_price = self.exchange.get_historical_price(
             self.symbol, self.time_frame, 60)
         prices = raw_price['Close']
         df = pd.DataFrame()
@@ -67,7 +65,7 @@ class Macd:
         macd = Decimal(df['macd'].tail(1))
         macd_signal = Decimal(df['macdsignal'].tail(1))
 
-        if (macd < macd_signal):
+        if macd < macd_signal:
             return True
 
     # TODO: Add validation

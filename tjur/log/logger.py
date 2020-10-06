@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 
 
-class Logger:
+class Logger():
 
     tjur_dir = os.path.dirname(sys.argv[0])
     logging.basicConfig(
@@ -22,10 +22,10 @@ class Logger:
         logging.info(msg)
 
     def log_print(self, msg):
-        print('\n' + str(datetime.utcnow()) + ' ' + msg)
         logging.info(msg)
+        print(msg)
 
     def log_print_and_exit(self, msg):
-        print('\n' + str(datetime.utcnow()) + ' ' + msg + '\n')
         logging.info(msg)
+        print(msg)
         sys.exit(0)
