@@ -5,14 +5,12 @@ import time
 
 from datetime import datetime
 
-
 class Logger():
 
-    tjur_dir = os.path.dirname(sys.argv[0])
+    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tjur-' + str(
+        datetime.timestamp(datetime.utcnow())) + '.log')
     logging.basicConfig(
-        filename=tjur_dir + '/log/tjur-' + str(
-            datetime.timestamp(
-                datetime.utcnow())) + '.log',
+        filename=filename,
         format='%(asctime)s.%(msecs)06d %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
         level=logging.INFO)

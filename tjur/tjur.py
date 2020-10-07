@@ -44,7 +44,7 @@ class Tjur():
                     and not binance.get_open_orders(self.symbols)):
                 self.position_size = self.get_position_size('BUY')
                 price = self.get_position_price()
-                # buy_order = self.buy(self.position_size, price)
+                buy_order = self.buy(self.position_size, price)
                 signal = buy_order['signal']
                 logger.log('Calculating sell signal.')
 

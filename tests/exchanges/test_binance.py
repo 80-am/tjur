@@ -1,9 +1,11 @@
 import time
 import unittest
 
+from tjur.log.logger import Logger
 from tjur.exchanges.binance import Binance
 
-binance = Binance('', '')
+logger = Logger()
+binance = Binance('', '', logger)
 
 
 class BinanceTest(unittest.TestCase):
