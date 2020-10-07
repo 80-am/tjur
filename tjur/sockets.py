@@ -46,7 +46,6 @@ class Socket():
 
         if data.get('U') is None:
             return self.book
-        self.last_u = data.get('U')
 
         if len(self.book) == 0:
             self.logger.log('Getting snapshot')

@@ -92,9 +92,13 @@ class Binance():
                   'limit': limit}
         raw_historical = self._get(path, params)
         df = pd.read_json(json.dumps(raw_historical))
-        if df.empty:
-            self.logger.log_print(path + str(params) + " response empty.")
-            return None
+        while df.empty:
+            self.logger.log_print(path + " response empty.")
+            time.sleep(5)
+            raw_historical = self._get(path, params)
+            df = pd.read_json(json.dumps(raw_historical))
+            if not df.empty:
+                break
 
         df.columns = ['Open time', 'Open', 'High', 'Low', 'Close', 'Volume',
                       'Close time', 'Quote asset volume', 'Number of trades',
