@@ -98,8 +98,8 @@ class Tjur():
         buy_price = Decimal(buy_order['fills'][0]['price'])
         take_profit = buy_price * self.win_target
         logger.log_print('OrderId: ' + str(buy_order['orderId']) + ' Buying '
-                   + str(position_size) + ' ' + self.symbol1 + ' for '
-                   + '{:.8f}'.format(buy_price) + self.symbol2)
+                   + str(position_size) + ' ' + self.symbol1 + ' @ '
+                   + '{:.8f}'.format(buy_price))
         logger.log('Aiming to sell at ' + str(take_profit) + ' '
                    + self.symbol2)
         order = {
@@ -112,10 +112,9 @@ class Tjur():
         sell_order = binance.create_new_order(
             self.symbols, 'SELL', self.order_type, str(position_size), price)
         sell_price = Decimal(sell_order['fills'][0]['price'])
-        logger.log_print('OrderId: ' + str(sell_order['orderId'] + ' Selling '
-                                     + position_size + ' ' + self.symbol1
-                                     + ' for ' + '{:.8f}'.format(sell_price)
-                                     + self.symbol2))
+        logger.log_print('OrderId: ' + str(sell_order['orderId']) + ' Selling '
+                                     + str(position_size) + ' ' + self.symbol1
+                                     + ' @ ' + '{:.8f}'.format(sell_price))
         order = {
             'price': sell_price,
             'signal': 0}

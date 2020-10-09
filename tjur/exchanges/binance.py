@@ -67,7 +67,12 @@ class Binance():
     def get_latest_price(self, symbol):
         path = '%s/ticker/price' % self.BASE_V3_URL
         params = {'symbol': symbol}
-        return self._get(path, params)
+        r = self._get(path, params)
+        while r is None:
+            r = self._get(path, params)
+            if not r is None:
+                break
+        return r
 
     # Kline/candles for a symbol, klines are identified by their open time
     def get_historical_data(self, symbol, candle_interval, limit):
