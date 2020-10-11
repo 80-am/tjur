@@ -10,7 +10,6 @@ import urllib3
 
 from decimal import Decimal
 from urllib.parse import urlencode
-from requests.exceptions import Timeout
 
 # Interface to Binance public Rest API
 
@@ -98,7 +97,7 @@ class Binance():
         raw_historical = self._get(path, params)
         df = pd.read_json(json.dumps(raw_historical))
         while df.empty:
-            self.logger.log_print(path + " response empty.")
+            self.logger.log(path + " response empty.")
             time.sleep(5)
             raw_historical = self._get(path, params)
             df = pd.read_json(json.dumps(raw_historical))
@@ -291,10 +290,14 @@ class Binance():
             if 'msg' in request:
                 self.logger.log_print(request['msg'])
             return request
-        except Exception:
-            Timeout
-            self.logger.log(Exception)
-            pass
+        except requests.exceptions.HTTPError as errh:
+            self.logger.log("HTTP Error:", errh)
+        except requests.exceptions.ConnectionError as errc:
+            self.logger("Connection Error:", errc)
+        except requests.exceptions.Timeout as errt:
+            self.logger("Timeout Error:", errt)
+        except requests.exceptions.RequestException as err:
+            self.logger("Error:", err)
 
     def _post(self, path, params):
         url = '%s?%s' % (path, urlencode(params))
