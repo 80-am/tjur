@@ -104,7 +104,6 @@ class Criterion():
         while not self.is_strategy_ready(selected):
             pass
 
-        self.logger.log_print('Trading ' + symbol['symbol'])
         strategy = {
             'symbol': symbol,
             'strategy': selected,
@@ -114,6 +113,8 @@ class Criterion():
             'long_term': long_term,
             'win_target': win_target,
             'position': position}
+        self.logger.log(strategy)
+        self.logger.log_print('Trading ' + symbol['symbol'])
         return strategy
 
     def define_sizing(self, symbols):
@@ -227,7 +228,6 @@ class Criterion():
         while not ready:
             try:
                 if strategy.is_ready():
-                    self.logger.log('Strategy ready')
                     return True
                 if start == '':
                     self.logger.log_print('Ongoing upward trend')

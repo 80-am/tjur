@@ -63,10 +63,13 @@ class Tjur():
                         sell_order = self.sell(self.position_size, price)
                         pl = Performance.calculate_pl(
                             buy_order['price'], sell_order['price'])
-                        logger.log_print('Sold! Margin: ' + str(round(pl, 3))
+                        logger.log_print('Sold @ ' + sell_order['price'] + ' with a margin of ' + str(round(pl, 3))
                                            + '%')
-                        signal = sell_order['signal']
-                        logger.log('Calculating buy signal.')
+                        acc = binance.get_account_information()
+                        binance.get_symbol_balance(acc, self.symbol2)
+
+                        while not self.strategy.is_ready():
+                            pass
 
     def get_position_size(self, side):
         if self.amount_type == 2:

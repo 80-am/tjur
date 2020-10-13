@@ -236,7 +236,9 @@ class Binance():
             params.update({'price': price,
                            'timeInForce': 'GTC'})
 
-        return self.sign_payload('POST', path, params)
+        r = self.sign_payload('POST', path, params)
+        self.logger.log(r)
+        return r
 
     # Creates and validates a new order without sending it to market
     def create_new_order_test(self, symbol, side, order_type, quantity, price):
@@ -273,7 +275,6 @@ class Binance():
         resp = requests.request(method, path + query,
                                 headers={"X-MBX-APIKEY": self.key})
         data = resp.json()
-        self.logger.log(data)
         if 'msg' in data:
             self.logger.log_print(data['msg'])
             if 'Filter failure' in data['msg']:
@@ -298,7 +299,3 @@ class Binance():
             self.logger("Timeout Error:", errt)
         except requests.exceptions.RequestException as err:
             self.logger("Error:", err)
-
-    def _post(self, path, params):
-        url = '%s?%s' % (path, urlencode(params))
-        return requests.post(url)
