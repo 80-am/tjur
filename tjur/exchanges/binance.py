@@ -292,10 +292,10 @@ class Binance():
                 self.logger.log_print(request['msg'])
             return request
         except requests.exceptions.HTTPError as errh:
-            self.logger.log("HTTP Error:", errh)
+            self.logger.log_print("HTTP Error:", errh)
         except requests.exceptions.ConnectionError as errc:
-            self.logger("Connection Error:", errc)
+            self.logger.log_print("Connection Error:", errc)
         except requests.exceptions.Timeout as errt:
-            self.logger("Timeout Error:", errt)
+            self.logger.log_print("Timeout Error:", errt)
         except requests.exceptions.RequestException as err:
-            self.logger("Error:", err)
+            self.logger.log_print("Error:", err)
