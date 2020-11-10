@@ -29,8 +29,7 @@ class Criterion():
             balance_symbol2 = self.exchange.get_symbol_balance(
                 account, symbol2)
         else:
-            self.logger.log_print_and_exit('No holdings in account for '
-                                           + symbol1)
+            self.logger.log_print_and_exit(f"No holdings in account for {symbol1}")
         symbol = symbol1 + symbol2
         filter_rules = self.exchange.get_symbol_filters(symbol)
         symbols = {
@@ -48,7 +47,7 @@ class Criterion():
     def validate_symbol(self, symbol):
         check_symbol = str(self.exchange.get_cur_avg_price(symbol))
         if 'Invalid symbol' in check_symbol:
-            self.logger.log_print_and_exit(symbol + 'is not a valid symbol')
+            self.logger.log_print_and_exit(f"{symbol} is not a valid symbol")
 
     def select_strategy(self):
         symbol = self.define_symbols()
@@ -114,7 +113,7 @@ class Criterion():
             'win_target': win_target,
             'position': position}
         self.logger.log(strategy)
-        self.logger.log_print('Trading ' + symbol['symbol'])
+        self.logger.log_print(f"Trading {symbol['symbol']}")
         return strategy
 
     def define_sizing(self, symbols):
@@ -214,8 +213,7 @@ class Criterion():
             else:
                 position['size'] = int(position['size'])
         if position['size'] < symbols['filters']['min_qty']:
-            self.logger.log_print_and_exit('Amount' + str(position['size'])
-                                           + ' too low')
+            self.logger.log_print_and_exit(f"Amount {position['size']} too low")
 
     def validate_time_frame(self, time_frame):
         if not (time_frame in {'1m', '3m', '5m', '15m', '30m', '45m',

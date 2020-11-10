@@ -97,7 +97,7 @@ class Binance():
         raw_historical = self._get(path, params)
         df = pd.read_json(json.dumps(raw_historical))
         while df.empty:
-            self.logger.log(path + " response empty.")
+            self.logger.log(f"{path} response empty.")
             time.sleep(5)
             raw_historical = self._get(path, params)
             df = pd.read_json(json.dumps(raw_historical))
@@ -154,7 +154,7 @@ class Binance():
 
         for assets in account['balances']:
             if assets['asset'] == symbol:
-                self.logger.log_print('Balance for ' + symbol + ' : ' + assets['free'])
+                self.logger.log_print(f"Balance for {symbol}: {assets['free']}")
                 return Decimal(assets['free'])
 
     def get_symbol_filters(self, symbols):
@@ -276,7 +276,7 @@ class Binance():
                                 headers={"X-MBX-APIKEY": self.key})
         data = resp.json()
         if 'msg' in data:
-            self.logger.log_print(data['msg'])
+            self.logger.log_print(f"{data['msg']}")
             if 'Filter failure' in data['msg']:
                 self.logger.log_print_and_exit('Exiting')
                 sys.exit(0)
@@ -289,13 +289,13 @@ class Binance():
             request = init_request.json()
             init_request.close()
             if 'msg' in request:
-                self.logger.log_print(request['msg'])
+                self.logger.log_print(f"{request['msg']}")
             return request
         except requests.exceptions.HTTPError as errh:
-            self.logger.log_print("HTTP Error:" + str(errh))
+            self.logger.log_print(f"HTTP Error: {errh}")
         except requests.exceptions.ConnectionError as errc:
-            self.logger.log_print("Connection Error:" + str(errc))
+            self.logger.log_print(f"Connection Error: {errc}")
         except requests.exceptions.Timeout as errt:
-            self.logger.log_print("Timeout Error:" + str(errt))
+            self.logger.log_print(f"Timeout Error: {errt}")
         except requests.exceptions.RequestException as err:
-            self.logger.log_print("Error:" + str(err))
+            self.logger.log_print(f"Error: {err}")

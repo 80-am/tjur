@@ -135,7 +135,7 @@ class Socket():
             "id": 1
         }
         await self.ws.send(json.dumps(sub))
-        self.logger.log('Subscribing to ' + self.stream)
+        self.logger.log(f"Subscribing to {self.stream}")
 
     async def unsubscribe(self):
         sub = {
@@ -146,7 +146,7 @@ class Socket():
             "id": 312
         }
         await self.ws.send(json.dumps(sub))
-        self.logger.log('Unsubscribing to ' + self.stream)
+        self.logger.log(f"Unsubscribing to {self.stream}")
 
     async def list_subscriptions(self):
         list_subs = {

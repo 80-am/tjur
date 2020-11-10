@@ -49,11 +49,10 @@ class Maco():
             short_ma = MovingAverages.get_ema(short_ma_price, self.short_ticks)
             long_ma = MovingAverages.get_ema(long_ma_price, self.long_ticks)
         else:
-            print('Please use a supported moving average')
+            self.logger.log_print('Please use a supported moving average')
 
         if short_ma > long_ma:
-            self.logger.log('Golden crossing: Short MA (' + str(short_ma)
-                            + ') greater than long MA (' + str(long_ma) + ')')
+            self.logger.log(f"Golden crossing: Short MA ({short_ma}) greater than long MA ({long_ma})")
             return True
 
     def calculate_sell_signal(self):
@@ -78,9 +77,10 @@ class Maco():
             short_ma = MovingAverages.get_ema(short_ma_price, self.short_ticks)
             long_ma = MovingAverages.get_ema(long_ma_price, self.long_ticks)
         else:
-            print('Please use a supported moving average')
+            self.logger.log_print('Please use a supported moving average')
 
         if long_ma > short_ma:
+            self.logger.log(f"Death crossing: Long MA ({long_ma}) greater than short MA ({short_ma})")
             return True
 
     def is_ready(self):
