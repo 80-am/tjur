@@ -1,4 +1,4 @@
-websockets==7.0
+websockets==9.1
 numpy==1.18.1
 pandas==0.25.3
 urllib3==1.26.5
