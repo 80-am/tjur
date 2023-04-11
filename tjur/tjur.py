@@ -63,7 +63,8 @@ class Tjur():
                         sell_order = self.sell(self.position_size, price)
                         pl = Performance.calculate_pl(
                             buy_order['price'], sell_order['price'])
-                        logger.log_print(f"Sold @ {sell_order['price']} with a margin of {round(pl, 3)}%")
+                        logger.log_print(
+                            f"Sold @ {sell_order['price']} with a margin of {round(pl, 3)}%")
                         acc = binance.get_account_information()
                         binance.get_symbol_balance(acc, self.symbol2)
 
@@ -80,7 +81,7 @@ class Tjur():
                     account, self.symbol2)
                 cur_avg_price = binance.get_cur_avg_price(self.symbols)
                 position = Decimal((self.position_percentage * balance_symbol2) / cur_avg_price
-                ).quantize(Decimal(10) ** -steps)
+                                   ).quantize(Decimal(10) ** -steps)
             elif side == 'SELL':
                 position = self.position_size
             if Decimal(steps) > 1:
@@ -99,7 +100,8 @@ class Tjur():
             self.symbols, 'BUY', self.order_type, str(position_size), price)
         buy_price = Decimal(buy_order['fills'][0]['price'])
         take_profit = buy_price * self.win_target
-        logger.log_print(f"OrderId: {buy_order['orderId']} Buying {position_size} {self.symbol1} @ {'{:.8f}'.format(buy_price)}")
+        logger.log_print(
+            f"OrderId: {buy_order['orderId']} Buying {position_size} {self.symbol1} @ {'{:.8f}'.format(buy_price)}")
         logger.log(f"Aiming to sell at {take_profit} {self.symbol2}")
         order = {
             'price': buy_price,
@@ -111,7 +113,8 @@ class Tjur():
         sell_order = binance.create_new_order(
             self.symbols, 'SELL', self.order_type, str(position_size), price)
         sell_price = Decimal(sell_order['fills'][0]['price'])
-        logger.log_print(f"OrderId: {sell_order['orderId']} Selling {position_size} {self.symbol1} @ {'{:.8f}'.format(sell_price)}")
+        logger.log_print(
+            f"OrderId: {sell_order['orderId']} Selling {position_size} {self.symbol1} @ {'{:.8f}'.format(sell_price)}")
         order = {
             'price': sell_price,
             'signal': 0}

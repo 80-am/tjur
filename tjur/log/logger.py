@@ -3,12 +3,11 @@ import os
 import sys
 import time
 
-from datetime import datetime
 
 class Logger():
 
-    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tjur-' + str(
-        datetime.timestamp(datetime.utcnow())) + '.log')
+    filename = os.path.join(os.path.dirname(
+        os.path.realpath(__file__)), 'tjur.log')
     logging.basicConfig(
         filename=filename,
         format='%(asctime)s.%(msecs)06d %(message)s',

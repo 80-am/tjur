@@ -1,4 +1,3 @@
-import sys
 import os
 
 import config
@@ -9,11 +8,11 @@ from strategies.macd import Macd
 
 API_KEY = config.BINANCE['api_key']
 API_SECRET = config.BINANCE['api_secret']
-tjur_dir = os.path.dirname(sys.argv[0])
 
 
 class Criterion():
-    with open(tjur_dir + '/assets/start-up.txt', 'r') as f:
+    file_name = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'assets/start-up.txt')
+    with open(file_name, 'r') as f:
         print(f.read())
 
     def __init__(self, exchange, logger):

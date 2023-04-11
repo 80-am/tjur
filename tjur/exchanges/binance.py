@@ -19,7 +19,7 @@ class Binance():
     BASE_URL = 'https://www.binance.com/api/v1'
     BASE_V3_URL = 'https://api.binance.com/api/v3'
     PUBLIC_URL = 'https://www.binance.com/exchange/public/product'
-    pd.set_option('display.max_colwidth', -1)
+    pd.set_option('display.max_colwidth', None)
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     def __init__(self, key, secret, logger):
@@ -154,7 +154,8 @@ class Binance():
 
         for assets in account['balances']:
             if assets['asset'] == symbol:
-                self.logger.log_print(f"Balance for {symbol}: {assets['free']}")
+                self.logger.log_print(
+                    f"Balance for {symbol}: {assets['free']}")
                 return Decimal(assets['free'])
 
     def get_symbol_filters(self, symbols):
