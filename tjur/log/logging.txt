@@ -1,3 +1,1 @@
 Log files will be keept in this directory.
-
-Each time the program is started a log file will be created and named with current timestamp in UTC.

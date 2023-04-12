@@ -6,13 +6,21 @@
 Binance momentum bot
 
 ## Getting Started
-Copy [tjur/config.sample](tjur/config.sample) into tjur/config.py and fill in your API secrets.
+Copy [tjur/config.sample](tjur/config.sample) into tjur/config.yaml and fill in your API secrets.
 
-```py
-BINANCE = {
-    'api_key': 'YOUR_API_KEY',
-    'api_secret': 'YOUR_API_SECRET'
-}
+```yaml
+binance:
+  api_key: 'YOUR_API_KEY'
+  api_secret: 'YOUR_API_SECRET'
+
+log:
+  level: 'INFO'
+
+symbols:
+  one: 'ETH'
+  two: 'USDT'
+
+position_percentage: 4
 ```
 
 Install dependencies with pip.

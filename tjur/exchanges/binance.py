@@ -97,7 +97,7 @@ class Binance():
         raw_historical = self._get(path, params)
         df = pd.read_json(json.dumps(raw_historical))
         while df.empty:
-            self.logger.log(f"{path} response empty.")
+            self.logger.warn(f"{path} response empty.")
             time.sleep(5)
             raw_historical = self._get(path, params)
             df = pd.read_json(json.dumps(raw_historical))
@@ -114,6 +114,7 @@ class Binance():
             lambda x: datetime.datetime.fromtimestamp(x / 1e3))
         df['Close time'] = df['Close time'].apply(
             lambda x: datetime.datetime.fromtimestamp(x / 1e3))
+        df = df.set_index(pd.to_datetime(df['Open time']))
 
         return df
 
@@ -154,7 +155,7 @@ class Binance():
 
         for assets in account['balances']:
             if assets['asset'] == symbol:
-                self.logger.log_print(
+                self.logger.info(
                     f"Balance for {symbol}: {assets['free']}")
                 return Decimal(assets['free'])
 
@@ -238,7 +239,7 @@ class Binance():
                            'timeInForce': 'GTC'})
 
         r = self.sign_payload('POST', path, params)
-        self.logger.log(r)
+        self.logger.debug(r)
         return r
 
     # Creates and validates a new order without sending it to market
@@ -277,7 +278,7 @@ class Binance():
                                 headers={"X-MBX-APIKEY": self.key})
         data = resp.json()
         if 'msg' in data:
-            self.logger.log_print(f"{data['msg']}")
+            self.logger.debug(f"{data['msg']}")
             if 'Filter failure' in data['msg']:
                 self.logger.log_print_and_exit('Exiting')
                 sys.exit(0)
@@ -290,13 +291,13 @@ class Binance():
             request = init_request.json()
             init_request.close()
             if 'msg' in request:
-                self.logger.log_print(f"{request['msg']}")
+                self.logger.debug(f"{request['msg']}")
             return request
         except requests.exceptions.HTTPError as errh:
-            self.logger.log_print(f"HTTP Error: {errh}")
+            self.logger.error(f"HTTP Error: {errh}")
         except requests.exceptions.ConnectionError as errc:
-            self.logger.log_print(f"Connection Error: {errc}")
+            self.logger.error(f"Connection Error: {errc}")
         except requests.exceptions.Timeout as errt:
-            self.logger.log_print(f"Timeout Error: {errt}")
+            self.logger.error(f"Timeout Error: {errt}")
         except requests.exceptions.RequestException as err:
-            self.logger.log_print(f"Error: {err}")
+            self.logger.error(f"Error: {err}")

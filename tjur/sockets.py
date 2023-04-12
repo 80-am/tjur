@@ -39,7 +39,7 @@ class Socket():
     def get_book(self):
         data = self.on_msg()
         if data is None:
-            self.logger.log('No data in book')
+            self.logger.warn('No data in book')
             self.restart_socket()
             return self.book
         data = json.loads(data)
@@ -48,12 +48,12 @@ class Socket():
             return self.book
 
         if len(self.book) == 0:
-            self.logger.log('Getting snapshot')
+            self.logger.debug('Getting snapshot')
             self.book = self.get_snapshot()
             return self.book
 
         if not self.book.get('bids'):
-            self.logger.log('Bids or asks empty')
+            self.logger.warn('Bids or asks empty')
             self.restart_socket()
 
         lastUpdateId = self.book.get('lastUpdateId')
@@ -102,8 +102,7 @@ class Socket():
         try:
             return self.loop.run_until_complete(self.__async__on_msg())
         except Exception as e:
-            self.logger.log('Exception in on_msg')
-            self.logger.log(e)
+            self.logger.error(f'Exception in on_msg {e}')
             self.restart_socket()
 
     async def __async__connect(self):
@@ -112,8 +111,7 @@ class Socket():
                                                       ping_interval=None,
                                                       ping_timeout=None)
         except Exception as e:
-            self.logger.log('Exception in connect')
-            self.logger.log(e)
+            self.logger.error(f'Exception in connect {e}')
 
     async def __async__reconnect(self):
         try:
@@ -122,8 +120,7 @@ class Socket():
                                                       ping_timeout=None)
             await self.ws.pong()
         except Exception as e:
-            self.logger.log('Exception in async reconnect')
-            self.logger.log(e)
+            self.logger.error(f'Exception in async reconnect {e}')
         await self.subscribe()
 
     async def subscribe(self):
@@ -135,7 +132,7 @@ class Socket():
             "id": 1
         }
         await self.ws.send(json.dumps(sub))
-        self.logger.log(f"Subscribing to {self.stream}")
+        self.logger.debug(f"Subscribing to {self.stream}")
 
     async def unsubscribe(self):
         sub = {
@@ -146,7 +143,7 @@ class Socket():
             "id": 312
         }
         await self.ws.send(json.dumps(sub))
-        self.logger.log(f"Unsubscribing to {self.stream}")
+        self.logger.debug(f"Unsubscribing to {self.stream}")
 
     async def list_subscriptions(self):
         list_subs = {
@@ -156,12 +153,11 @@ class Socket():
         await self.ws.send(json.dumps(list_subs))
 
     def restart_socket(self):
-        self.logger.log('Restarting socket')
+        self.logger.debug('Restarting socket')
         try:
             self.loop.run_until_complete(self.__async__reconnect())
         except Exception as e:
-            self.logger.log('Exception in reconnect')
-            self.logger.log(e)
+            self.logger.error(f'Exception in reconnect {e}')
         self.book = self.get_snapshot()
         self.updates = 0
 
@@ -169,7 +165,7 @@ class Socket():
         try:
             await self.ws.close()
         except Exception as e:
-            self.logger.log(e)
+            self.logger.error(f'Exception in close_socket {e}')
 
     async def __async__on_msg(self):
         return await self.ws.recv()

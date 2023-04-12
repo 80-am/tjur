@@ -1,7 +1,12 @@
-# Platforms will be added continually
+binance:
+  api_key: 'YOUR_API_KEY'
+  api_secret: 'YOUR_API_SECRET'
 
-# Enter your API secrets
-BINANCE = {
-    'api_key': 'YOUR_API_KEY',
-    'api_secret': 'YOUR_API_SECRET'
-}
+log:
+  level: 'INFO'
+
+symbols:
+  one: 'ETH'
+  two: 'USDT'
+
+position_percentage: 4

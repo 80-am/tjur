@@ -1,7 +1,8 @@
 __pycache__/
-config.py
+config.yaml
 *.idea/
 *.swp
 *.smp
 *.log
 .DS_Store
+.vscode
