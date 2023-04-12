@@ -20,3 +20,7 @@ class Indicators():
         df = ta.vwap(self.data['High'], self.data['Low'],
                      self.data['Close'], self.data['Volume'], anchor='D')
         return df.iloc[-1]
+
+    def calculate_rsi(self, length):
+        if self.data['Close'] is not None and length <= len(self.data['Close']):
+            return ta.rsi(self.data['Close'], length=length).iloc[-1]

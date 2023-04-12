@@ -62,28 +62,24 @@ class Tjur():
                             acc, self.symbol2)
 
     def get_position_size(self, side):
-        if self.amount_type == 2:
-            steps = str(self.steps).find('1') - 1
-            step_precision = Decimal(10) ** -steps
-            account = self.exchange.get_account_information()
-            if side == 'BUY':
-                balance_symbol2 = self.exchange.get_symbol_balance(
-                    account, self.symbol2)
-                cur_avg_price = self.exchange.get_cur_avg_price(self.symbols)
-                position = Decimal((self.position_percentage * balance_symbol2) / cur_avg_price
-                                   ).quantize(Decimal(10) ** -steps)
-            elif side == 'SELL':
-                position = self.position_size
-            if Decimal(steps) > 1:
-                return Decimal(position).quantize(step_precision)
-            return int(position)
-        return self.position_size
+        steps = str(self.steps).find('1') - 1
+        step_precision = Decimal(10) ** -steps
+        account = self.exchange.get_account_information()
+        if side == 'BUY':
+            balance_symbol2 = self.exchange.get_symbol_balance(
+                account, self.symbol2)
+            cur_avg_price = self.exchange.get_cur_avg_price(self.symbols)
+            position = Decimal((self.position_percentage * balance_symbol2) / cur_avg_price
+                               ).quantize(Decimal(10) ** -steps)
+        elif side == 'SELL':
+            position = self.position_size
+        if Decimal(steps) > 1:
+            return Decimal(position).quantize(step_precision)
+        return int(position)
 
     # TODO: Create price logic when using LIMIT, for now uses latest price.
     def get_position_price(self):
-        if self.order_type == 'LIMIT':
-            return self.exchange.get_latest_price(self.symbols)['price']
-        return None
+        return self.exchange.get_latest_price(self.symbols)['price']
 
     def buy(self, position_size, price):
         buy_order = self.exchange.create_new_order(

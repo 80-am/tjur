@@ -4,6 +4,8 @@ from decimal import Decimal
 
 CANDLE_INTERVAL = '5m'
 EMA_LENGTH = 20
+RSI_LENGTH = 14
+RSI_LEVEL = 55
 
 
 class Ta():
@@ -20,8 +22,10 @@ class Ta():
     def matches_entry_criteria(self):
         above_ema = self.is_price_above_ema()
         above_vwap = self.is_above_vwap()
+        below_rsi = self.is_below_rsi()
 
-        if above_ema == above_ema == True:
+        if above_ema == above_vwap == below_rsi == True:
+            print('ALL MATCHING')
             return True
 
     def matches_exit_criteria(self):
@@ -53,3 +57,16 @@ class Ta():
             self.logger.debug(
                 f'Last price({self.last_price}) is below VWAP({vwap})')
             return False
+
+    def is_below_rsi(self):
+        rsi = Indicators(self.logger, self.history).calculate_rsi(RSI_LENGTH)
+        if rsi is None:
+            return False
+        if rsi > RSI_LEVEL:
+            self.logger.debug(
+                f'RSI({round(rsi, 2)}) above {RSI_LEVEL}')
+            return False
+        else:
+            self.logger.debug(
+                f'RSI({round(rsi, 2)}) below {RSI_LEVEL}')
+            return True

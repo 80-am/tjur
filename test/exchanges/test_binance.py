@@ -1,4 +1,5 @@
 import time
+import tjur
 import unittest
 
 from tjur.log.logger import Logger
@@ -16,11 +17,11 @@ class BinanceTest(unittest.TestCase):
             int(time.time()))[:-1])
 
     def test_recent_trades(self):
-        trades = binance.get_recent_trades('LINKETH', 100)
+        trades = binance.get_recent_trades('BTCUSDT', 100)
         self.assertTrue(len(trades) == 100)
 
     def test_get_current_average_price(self):
-        price = binance.get_cur_avg_price('LINKETH')
+        price = binance.get_cur_avg_price('BTCUSDT')
         self.assertGreater(price, 0)
 
 
