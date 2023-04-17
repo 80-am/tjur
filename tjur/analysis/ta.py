@@ -10,8 +10,9 @@ RSI_LEVEL = 55
 
 class Ta():
 
-    def __init__(self, logger, symbols, exchange):
+    def __init__(self, logger, config, symbols, exchange):
         self.logger = logger
+        self.config = config
         self.symbols = symbols
         self.exchange = exchange
         self.history = exchange.get_historical_data(
@@ -25,11 +26,11 @@ class Ta():
         below_rsi = self.is_below_rsi()
 
         if above_ema == above_vwap == below_rsi == True:
-            print('ALL MATCHING')
+            self.logger.info(f'All criterias matching')
             return True
 
     def matches_exit_criteria(self):
-        return False
+        return False  # TODO
 
     def is_price_above_ema(self):
         ema = Indicators(self.logger, self.history.tail(

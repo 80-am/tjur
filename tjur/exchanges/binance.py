@@ -216,12 +216,11 @@ class Binance():
         return self.sign_payload('GET', path, params)
 
     # Creates and validates a new order
-    def create_new_order(self, symbol, side, order_type, quantity, price):
+    def create_new_order(self, symbol, side, quantity, price):
         """
         Args:
         symbol (str): Symbol pair to operate on i.e LINKETH
         side (str): Order side i.e buy or sell
-        order_type (str): Order type i.e MARKET
         quantity (decimal): Position sizing, quantity to trade
         price (str): Price of position
         """
@@ -230,25 +229,22 @@ class Binance():
         path = '%s/order?' % self.BASE_V3_URL
         params = {'symbol': symbol,
                   'side': side,
-                  'type': order_type,
+                  'type': 'LIMIT',
                   'quantity': quantity,
-                  'recvWindow': 4000}
-        if order_type == 'LIMIT':
-            params = params.copy()
-            params.update({'price': price,
-                           'timeInForce': 'GTC'})
+                  'recvWindow': 4000,
+                  'price': price,
+                  'timeInForce': 'GTC'}
 
         r = self.sign_payload('POST', path, params)
         self.logger.debug(r)
         return r
 
     # Creates and validates a new order without sending it to market
-    def create_new_order_test(self, symbol, side, order_type, quantity, price):
+    def create_new_order_test(self, symbol, side, quantity, price):
         """
         Args:
         symbol (str): Symbol pair to operate on i.e LINKETH
         side (str): Order side i.e buy or sell
-        order_type (str): Order type i.e MARKET
         quantity (decimal): Position sizing, quantity to trade
         price (str): Price of position
         """
@@ -257,15 +253,46 @@ class Binance():
         params = {
             'symbol': symbol,
             'side': side,
-            'type': order_type,
+            'type': 'LIMIT',
             'quantity': quantity,
-            'recvWindow': 4000}
-        if order_type == 'LIMIT':
-            params = params.copy()
-            params.update({'price': price,
-                           'timeInForce': 'GTC'})
+            'recvWindow': 4000,
+            'price': price,
+            'timeInForce': 'GTC'}
 
         return self.sign_payload('POST', path, params)
+
+    def create_new_order_mocked(self, symbol, commission_asset, quantity, price):
+        """
+        Args:
+        symbol (str): Symbol pair to operate on i.e LINKETH
+        side (str): Order side i.e buy or sell
+        quantity (decimal): Position sizing, quantity to trade
+        price (str): Price of position
+        """
+
+        return {
+            'symbol': symbol,
+            'orderId': 1337,
+            'origQty': quantity,
+            'executedQty': quantity,
+            'cummulativeQuoteQty': quantity,
+            'fills': [
+                {
+                    'price': price,
+                    'qty': quantity / 2,
+                    'commission': '4.00000000',
+                    'commissionAsset': commission_asset,
+                    'tradeId': 56
+                },
+                {
+                    'price': price - 1,
+                    'qty': quantity / 2,
+                    'commission': '19.99500000',
+                    'commissionAsset': commission_asset,
+                    'tradeId': 57
+                }
+            ]
+        }
 
     def sign_payload(self, method, path, params):
         query = urlencode(sorted(params.items()))

@@ -17,6 +17,7 @@ class Tjur():
     def __init__(self, logger, config, criteria, exchange):
         self.logger = logger
         self.config = config
+        self.live_trading = config['live_trading']
         self.criteria = criteria
         self.exchange = exchange
         self.symbols = criteria['symbol']['symbol']
@@ -32,7 +33,7 @@ class Tjur():
         Running calculations
         """
         k = 0
-        ta = Ta(self.logger, self.symbols, self.exchange)
+        ta = Ta(self.logger, self.config, self.symbols, self.exchange)
         while k != ord('q'):
             if (ta.matches_entry_criteria() and not binance.get_open_orders(self.symbols)):
                 self.position_size = self.get_position_size('BUY')
@@ -82,8 +83,12 @@ class Tjur():
         return self.exchange.get_latest_price(self.symbols)['price']
 
     def buy(self, position_size, price):
-        buy_order = self.exchange.create_new_order(
-            self.symbols, 'BUY', self.order_type, str(position_size), price)
+        if self.live_trading:
+            buy_order = self.exchange.create_new_order(
+                self.symbols, 'BUY', str(position_size), price)
+        else:
+            buy_order = self.exchange.create_new_order_mocked(
+                self.symbols, self.symbol2, str(position_size), price)
         buy_price = Decimal(buy_order['fills'][0]['price'])
         take_profit = buy_price * 1.1  # TODO: create exit logic
         self.logger.info(
@@ -96,8 +101,12 @@ class Tjur():
         return order
 
     def sell(self, position_size, price):
-        sell_order = self.exchange.create_new_order(
-            self.symbols, 'SELL', self.order_type, str(position_size), price)
+        if self.live_trading:
+            sell_order = self.exchange.create_new_order(
+                self.symbols, 'SELL', str(position_size), price)
+        else:
+            sell_order = self.exchange.create_new_order_mocked(
+                self.symbols, self.symbol2, quantity, price)
         sell_price = Decimal(sell_order['fills'][0]['price'])
         self.logger.info(
             f"OrderId: {sell_order['orderId']} Selling {position_size} {self.symbol1} @ {'{:.8f}'.format(sell_price)}")
@@ -121,7 +130,13 @@ if __name__ == '__main__':
         config = yaml.load(c, Loader=yaml.FullLoader)
         API_KEY = config['binance']['api_key']
         API_SECRET = config['binance']['api_secret']
+        LIVE_TRADING = config['live_trading']
         print(f.read())
+        if LIVE_TRADING:
+            confirm = input('Starting live trading. Continue? [y/N] ').upper()
+            if not confirm == 'Y':
+                print('Exiting')
+                sys.exit(0)
 
     parser = Parser()
     args = parser.parse()

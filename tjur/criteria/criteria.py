@@ -1,4 +1,3 @@
-
 from decimal import Decimal
 from exchanges.binance import Binance
 

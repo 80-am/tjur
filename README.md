@@ -9,6 +9,9 @@ Binance momentum bot
 Copy [tjur/config.sample](tjur/config.sample) into tjur/config.yaml and fill in your API secrets.
 
 ```yaml
+# Live trading or paper trading
+live_trading: False
+
 binance:
   api_key: 'YOUR_API_KEY'
   api_secret: 'YOUR_API_SECRET'
