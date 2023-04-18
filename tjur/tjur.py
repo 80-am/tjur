@@ -34,6 +34,8 @@ class Tjur():
         """
         k = 0
         ta = Ta(self.logger, self.config, self.symbols, self.exchange)
+        self.logger.write_to_screen(0, 0, 'Trading ' + self.symbols)
+        self.logger.write_to_screen(1, 0, '🔎 Looking for entry position')
         while k != ord('q'):
             if (ta.matches_entry_criteria() and not binance.get_open_orders(self.symbols)):
                 self.position_size = self.get_position_size('BUY')
@@ -41,6 +43,7 @@ class Tjur():
                 buy_order = self.buy(self.position_size, price)
                 signal = buy_order['signal']
                 self.logger.info('Calculating sell signal.')
+                self.logger.write_to_screen(1, 0, '🚀 Calculating sell signal.')
 
                 while signal == 1:
                     latest_price = Decimal(
@@ -90,7 +93,7 @@ class Tjur():
             buy_order = self.exchange.create_new_order_mocked(
                 self.symbols, self.symbol2, str(position_size), price)
         buy_price = Decimal(buy_order['fills'][0]['price'])
-        take_profit = buy_price * 1.1  # TODO: create exit logic
+        take_profit = buy_price * Decimal(1.01)  # TODO: create exit logic
         self.logger.info(
             f"OrderId: {buy_order['orderId']} Buying {position_size} {self.symbol1} @ {'{:.8f}'.format(buy_price)}")
         self.logger.info(f"Aiming to sell at {take_profit} {self.symbol2}")
@@ -126,12 +129,11 @@ class Tjur():
 
 if __name__ == '__main__':
     path = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(path, "config.yaml"), "r") as c, open(os.path.join(path, 'assets/start-up.txt')) as f:
+    with open(os.path.join(path, "config.yaml"), "r") as c:
         config = yaml.load(c, Loader=yaml.FullLoader)
         API_KEY = config['binance']['api_key']
         API_SECRET = config['binance']['api_secret']
         LIVE_TRADING = config['live_trading']
-        print(f.read())
         if LIVE_TRADING:
             confirm = input('Starting live trading. Continue? [y/N] ').upper()
             if not confirm == 'Y':

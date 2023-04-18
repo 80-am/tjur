@@ -279,18 +279,11 @@ class Binance():
             'fills': [
                 {
                     'price': price,
-                    'qty': quantity / 2,
+                    'qty': quantity,
                     'commission': '4.00000000',
                     'commissionAsset': commission_asset,
                     'tradeId': 56
                 },
-                {
-                    'price': price - 1,
-                    'qty': quantity / 2,
-                    'commission': '19.99500000',
-                    'commissionAsset': commission_asset,
-                    'tradeId': 57
-                }
             ]
         }
 

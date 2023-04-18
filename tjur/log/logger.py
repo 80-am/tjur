@@ -1,3 +1,4 @@
+import curses
 import logging
 import os
 import sys
@@ -18,6 +19,14 @@ class Logger():
             datefmt='%Y-%m-%d %H:%M:%S',
             level=self.config['log']['level'] or 'INFO')
         logging.Formatter.converter = time.gmtime
+        if self.config['ui']:
+            self.stdscr = curses.initscr()
+            curses.noecho()
+            curses.cbreak()
+        else:
+            path = os.path.dirname(os.path.realpath(__file__))
+            with open(os.path.join(path, '../assets/start-up.txt')) as f:
+                print(f.read())
 
     def debug(self, msg):
         logging.debug(msg)
@@ -35,3 +44,9 @@ class Logger():
         logging.info(msg)
         print(msg)
         sys.exit(0)
+
+    def write_to_screen(self, y, x, msg):
+        if self.config['ui']:
+            self.stdscr.clrtoeol()
+            self.stdscr.addstr(y, x, msg)
+            self.stdscr.refresh()

@@ -12,6 +12,9 @@ Copy [tjur/config.sample](tjur/config.sample) into tjur/config.yaml and fill in 
 # Live trading or paper trading
 live_trading: False
 
+# Whether to use Terminal UI
+ui: True
+
 binance:
   api_key: 'YOUR_API_KEY'
   api_secret: 'YOUR_API_SECRET'
