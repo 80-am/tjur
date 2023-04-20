@@ -27,16 +27,28 @@ class Ta():
         above_vwap = self.is_above_vwap(history, last_price)
         below_rsi = self.is_below_rsi(history)
         self.logger.write_to_screen(3, 0, f'💰 Last price: {last_price}')
+        levels = self.get_support_and_resistance(history, last_price)
+        self.get_adx(history)
 
         if above_ema == above_vwap == below_rsi == True:
             self.logger.info(f'All criterias matching')
             return True
 
-    def matches_exit_criteria(self):
+    def matches_exit_criteria(self, purchase_price):
         last_price = Decimal(
             self.exchange.get_latest_price(self.symbols)['price'])
+        history = self.exchange.get_historical_data(
+            self.symbols, '1m', 1000)
         self.logger.write_to_screen(3, 0, f'💰 Last price: {last_price}')
-        return False  # TODO
+        stop_loss = self.set_stop_loss(purchase_price)
+        self.logger.write_to_screen(6, 0, f'🛑 Stop loss: {stop_loss:.8f}')
+        self.get_adx(history)
+        if (last_price < stop_loss):
+            return True
+
+    def set_stop_loss(self, purchase_price):
+        # TODO: Define a good stop loss
+        return purchase_price * Decimal(0.95)
 
     def is_price_above_ema(self, history, last_price):
         ema = Indicators(self.logger, history.tail(
@@ -83,3 +95,16 @@ class Ta():
                 f'RSI({round(rsi, 2)}) below {RSI_LEVEL}')
             self.logger.write_to_screen(6, 0, f'✅ RSI({RSI_LEVEL}): {rsi}')
             return True
+
+    def get_adx(self, history):
+        adx = Indicators(
+            self.logger, history).calculate_adx().iloc[-1]['ADX_14']
+        self.logger.write_to_screen(8, 0, f'💪 ADX(14): {adx:.2f}')
+
+    def get_support_and_resistance(self, history, last_price):
+        levels = Indicators(self.logger, history).calculate_levels(last_price)
+        support = levels['support']
+        resistance = levels['resistance']
+        self.logger.write_to_screen(
+            7, 0, f'🎚️  Levels(Sup/Res): {support} / {resistance}')
+        return

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import datetime
 import sys
 import os
 import yaml
@@ -44,16 +45,18 @@ class Tjur():
                 signal = buy_order['signal']
                 self.logger.info('Calculating sell signal.')
                 self.logger.write_to_screen(1, 0, '🚀 Calculating sell signal.')
+                self.logger.clear_lines(4, 8)
+                self.logger.write_to_screen(4, 0, f'🛒 Purchase price: {price}')
+                now = str(datetime.datetime.now(datetime.timezone.utc)).split('.')[0]
+                self.logger.write_to_screen(5, 0, f'⏱️ Purchase time: {now}')
 
                 while signal == 1:
                     latest_price = Decimal(
                         binance.get_latest_price(self.symbols)['price']
                         or buy_order['price'])
-                    stop_loss = buy_order['price'] * Decimal(0.92)
-                    sell_signal = ta.matches_exit_criteria()
+                    sell_signal = ta.matches_exit_criteria(buy_order['price'])
 
-                    if ((stop_loss >= latest_price) or (sell_signal and latest_price
-                                                        >= buy_order['take_profit'])):
+                    if (sell_signal):
                         self.position_size = self.get_position_size('SELL')
                         price = self.get_position_price()
                         sell_order = self.sell(self.position_size, price)
@@ -90,16 +93,14 @@ class Tjur():
             buy_order = self.exchange.create_new_order(
                 self.symbols, 'BUY', str(position_size), price)
         else:
+            position_size = 1
             buy_order = self.exchange.create_new_order_mocked(
                 self.symbols, self.symbol2, str(position_size), price)
         buy_price = Decimal(buy_order['fills'][0]['price'])
-        take_profit = buy_price * Decimal(1.01)  # TODO: create exit logic
         self.logger.info(
-            f"OrderId: {buy_order['orderId']} Buying {position_size} {self.symbol1} @ {'{:.8f}'.format(buy_price)}")
-        self.logger.info(f"Aiming to sell at {take_profit} {self.symbol2}")
+            f"OrderId: {buy_order['orderId']} Buying {position_size} {self.symbol1} @ {buy_price:.8f}")
         order = {
             'price': buy_price,
-            'take_profit': take_profit,
             'signal': 1}
         return order
 
@@ -112,7 +113,7 @@ class Tjur():
                 self.symbols, self.symbol2, quantity, price)
         sell_price = Decimal(sell_order['fills'][0]['price'])
         self.logger.info(
-            f"OrderId: {sell_order['orderId']} Selling {position_size} {self.symbol1} @ {'{:.8f}'.format(sell_price)}")
+            f"OrderId: {sell_order['orderId']} Selling {position_size} {self.symbol1} @ {sell_price:.8f}")
         order = {
             'price': sell_price,
             'signal': 0}

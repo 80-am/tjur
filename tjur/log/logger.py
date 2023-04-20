@@ -50,3 +50,10 @@ class Logger():
             self.stdscr.clrtoeol()
             self.stdscr.addstr(y, x, msg)
             self.stdscr.refresh()
+
+    def clear_lines(self, from_y, to_y):
+        if self.config['ui']:
+            for i in range(from_y, to_y):
+                self.stdscr.clrtoeol()
+                self.stdscr.addstr(i, 0, '')
+                self.stdscr.refresh()
