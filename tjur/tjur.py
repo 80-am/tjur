@@ -110,7 +110,7 @@ class Tjur():
                 self.symbols, 'SELL', str(position_size), price)
         else:
             sell_order = self.exchange.create_new_order_mocked(
-                self.symbols, self.symbol2, quantity, price)
+                self.symbols, self.symbol2, position_size, price)
         sell_price = Decimal(sell_order['fills'][0]['price'])
         self.logger.info(
             f"OrderId: {sell_order['orderId']} Selling {position_size} {self.symbol1} @ {sell_price:.8f}")

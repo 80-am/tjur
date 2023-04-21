@@ -26,11 +26,11 @@ class Ta():
         above_ema = self.is_price_above_ema(history, last_price)
         above_vwap = self.is_above_vwap(history, last_price)
         below_rsi = self.is_below_rsi(history)
+        above_resistance = self.is_above_restistance(history, last_price)
         self.logger.write_to_screen(3, 0, f'💰 Last price: {last_price}')
-        levels = self.get_support_and_resistance(history, last_price)
         self.get_adx(history)
 
-        if above_ema == above_vwap == below_rsi == True:
+        if above_ema == above_vwap == below_rsi == above_resistance == True:
             self.logger.info(f'All criterias matching')
             return True
 
@@ -43,7 +43,9 @@ class Ta():
         stop_loss = self.set_stop_loss(purchase_price)
         self.logger.write_to_screen(6, 0, f'🛑 Stop loss: {stop_loss:.8f}')
         self.get_adx(history)
-        if (last_price < stop_loss):
+        below_resistance = self.is_below_support(history, last_price)
+        # TODO: make sure to not sell if potential upswing
+        if (last_price < stop_loss) or below_resistance:
             return True
 
     def set_stop_loss(self, purchase_price):
@@ -96,6 +98,16 @@ class Ta():
             self.logger.write_to_screen(6, 0, f'✅ RSI({RSI_LEVEL}): {rsi}')
             return True
 
+    def is_above_restistance(self, history, last_price):
+        levels = self.get_support_and_resistance(history, last_price)
+        if last_price > levels['resistance']:
+            return True
+
+    def is_below_support(self, history, last_price):
+        levels = self.get_support_and_resistance(history, last_price)
+        if last_price < levels['support']:
+            return True
+
     def get_adx(self, history):
         adx = Indicators(
             self.logger, history).calculate_adx().iloc[-1]['ADX_14']
@@ -107,4 +119,4 @@ class Ta():
         resistance = levels['resistance']
         self.logger.write_to_screen(
             7, 0, f'🎚️  Levels(Sup/Res): {support} / {resistance}')
-        return
+        return levels
