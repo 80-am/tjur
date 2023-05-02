@@ -47,7 +47,8 @@ class Tjur():
                 self.logger.write_to_screen(1, 0, '🚀 Calculating sell signal.')
                 self.logger.clear_lines(4, 8)
                 self.logger.write_to_screen(4, 0, f'🛒 Purchase price: {price}')
-                now = str(datetime.datetime.now(datetime.timezone.utc)).split('.')[0]
+                now = str(datetime.datetime.now(
+                    datetime.timezone.utc)).split('.')[0]
                 self.logger.write_to_screen(5, 0, f'⏱️ Purchase time: {now}')
 
                 while signal == 1:
@@ -67,6 +68,7 @@ class Tjur():
                         acc = self.exchange.get_account_information()
                         self.exchange.get_symbol_balance(
                             acc, self.symbol2)
+                        signal = sell_order['signal']
 
     def get_position_size(self, side):
         steps = str(self.steps).find('1') - 1

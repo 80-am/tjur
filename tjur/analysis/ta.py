@@ -8,6 +8,7 @@ CANDLE_INTERVAL = '5m'
 EMA_LENGTH = 20
 RSI_LENGTH = 14
 RSI_LEVEL = 55
+TAKE_PROFIT_PERCENTAGE = 1.01  # TODO
 
 
 class Ta():
@@ -43,9 +44,10 @@ class Ta():
         stop_loss = self.set_stop_loss(purchase_price)
         self.logger.write_to_screen(6, 0, f'🛑 Stop loss: {stop_loss:.8f}')
         self.get_adx(history)
+        above_profit = self.is_above_take_profit(last_price, purchase_price)
         below_resistance = self.is_below_support(history, last_price)
         # TODO: make sure to not sell if potential upswing
-        if (last_price < stop_loss) or below_resistance:
+        if (last_price < stop_loss and above_profit) or below_resistance:
             return True
 
     def set_stop_loss(self, purchase_price):
@@ -106,6 +108,11 @@ class Ta():
     def is_below_support(self, history, last_price):
         levels = self.get_support_and_resistance(history, last_price)
         if last_price < levels['support']:
+            return True
+
+    def is_above_take_profit(self, last_price, purchase_price):
+        take_profit = Decimal(TAKE_PROFIT_PERCENTAGE) * purchase_price
+        if last_price > take_profit:
             return True
 
     def get_adx(self, history):
